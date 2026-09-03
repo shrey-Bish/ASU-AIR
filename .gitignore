@@ -1,3 +1,14 @@
-.DS_Store
+# Local secrets
 .env
 .env.*
+
+# macOS
+.DS_Store
+
+# Decks / source documents (large binaries, kept local)
+*.ppt
+*.pptx
+*.pdf
+*.key
+*.doc
+*.docx
