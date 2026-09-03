@@ -1,0 +1,118 @@
+{
+  "decks_attempted": 9,
+  "decks_succeeded": 9,
+  "failures": [],
+  "slides": 517,
+  "images_found": 405,
+  "auto_applied": 213,
+  "decorative": 187,
+  "review_queue": 5,
+  "tables_detected": 4,
+  "confidence_spread": {
+    "2": 3,
+    "3": 2,
+    "4": 126,
+    "5": 274
+  },
+  "wcag_by_check": {
+    "small_text": 240,
+    "reading_order": 210,
+    "missing_title": 135,
+    "table_no_header": 3,
+    "vague_link": 2
+  },
+  "wcag_total": 590,
+  "total_runtime_seconds": 514.1,
+  "per_deck": [
+    {
+      "deck": "CSE450_Unit2_Spring2019_(SchedulingPartitioning, MinimizeLateness, GreedyAlg).pptx",
+      "slides": 66,
+      "images": 10,
+      "auto_applied": 4,
+      "decorative": 5,
+      "review_queue": 1,
+      "wcag_issues": 114,
+      "runtime_seconds": 18.1
+    },
+    {
+      "deck": "CSE551_Unit1_Spring2019_(StableMatching, ProposeReject, FiveRepresentative).pptx",
+      "slides": 60,
+      "images": 6,
+      "auto_applied": 1,
+      "decorative": 5,
+      "review_queue": 0,
+      "wcag_issues": 131,
+      "runtime_seconds": 11.5
+    },
+    {
+      "deck": "September 8th-CSE 511.pptx",
+      "slides": 49,
+      "images": 91,
+      "auto_applied": 57,
+      "decorative": 30,
+      "review_queue": 4,
+      "wcag_issues": 54,
+      "runtime_seconds": 110.7
+    },
+    {
+      "deck": "U1_Introduction to Machine Learning (1).pptx",
+      "slides": 19,
+      "images": 23,
+      "auto_applied": 8,
+      "decorative": 15,
+      "review_queue": 0,
+      "wcag_issues": 6,
+      "runtime_seconds": 39.5
+    },
+    {
+      "deck": "U6-Unsupervised Learning - Clustering-1.pptx",
+      "slides": 37,
+      "images": 22,
+      "auto_applied": 15,
+      "decorative": 7,
+      "review_queue": 0,
+      "wcag_issues": 14,
+      "runtime_seconds": 36.6
+    },
+    {
+      "deck": "mit_ai101_eecs.pptx",
+      "slides": 54,
+      "images": 77,
+      "auto_applied": 66,
+      "decorative": 11,
+      "review_queue": 0,
+      "wcag_issues": 48,
+      "runtime_seconds": 107.0
+    },
+    {
+      "deck": "mit_cms595_media_ses1.pptx",
+      "slides": 23,
+      "images": 52,
+      "auto_applied": 28,
+      "decorative": 24,
+      "review_queue": 0,
+      "wcag_issues": 47,
+      "runtime_seconds": 65.0
+    },
+    {
+      "deck": "stanford_cs106b_fundamentals.pptx",
+      "slides": 102,
+      "images": 71,
+      "auto_applied": 5,
+      "decorative": 66,
+      "review_queue": 0,
+      "wcag_issues": 84,
+      "runtime_seconds": 52.8
+    },
+    {
+      "deck": "stanford_cs106b_welcome.pptx",
+      "slides": 107,
+      "images": 53,
+      "auto_applied": 29,
+      "decorative": 24,
+      "review_queue": 0,
+      "wcag_issues": 92,
+      "runtime_seconds": 71.1
+    }
+  ]
+}
