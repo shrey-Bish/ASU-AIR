@@ -3,13 +3,18 @@
 Accessibility remediation for PowerPoint lecture decks, running entirely on ASU
 Research Computing hardware.
 
-A blind student opening a lecture deck hears `"shape 4"` where everyone else
-sees a revenue chart. SlideSight finds every image in a `.pptx`, writes real alt
-text with a vision model, and writes it back into the file — but only when the
-model is confident. Everything else goes to a human review queue instead of
+A blind student opening a lecture deck hears `"Picture 4"` where everyone else
+sees a chart. In one real ASU course deck, what they actually hear is worse — the
+alt text is `C:\Users\symbiosis\Desktop\IB2COM\box_fls.png`, a Windows file
+path read out letter by letter.
+
+SlideSight finds every image in a `.pptx`, writes real alt text with a vision
+model running on ASU hardware, and saves it back into the file — but only when
+the model is confident. Everything else goes to a human review queue instead of
 being silently guessed.
 
-Built for the ASU AIR Spark Challenge.
+Built for the ASU AIR Spark Challenge. There is a browser app and a command
+line; both use the same pipeline.
 
 ## What makes this different
 
@@ -26,8 +31,14 @@ Two things here are:
    hardware.
 
 A third behaviour matters more than it sounds: **decorative images get empty alt
-text**, so screen readers skip them. A university logo repeated across 45 slides
-should be silent, not announced 45 times.
+text**, so screen readers skip them. One Stanford deck repeats a briefcase icon
+37 times; without this a student hears "briefcase" thirty-seven times in one
+lecture.
+
+And because silencing an image is the more harmful mistake — a wrongly-silenced
+diagram is deleted from the student's experience and never reaches a human —
+that decision is itself guarded. See [the decorative section](#silencing-an-image-is-the-dangerous-decision)
+for how we found our own tool getting it wrong.
 
 ## Install
 
@@ -121,7 +132,7 @@ slidesight/        the package -- extract, describe, apply, wcag, pipeline, cli
 server/            FastAPI app: upload, progress, review, approve, download
 web/               the browser UI (index.html, style.css, app.js)
 scripts/           evaluate.py, make_review_demo.py, screen_reader_preview.py
-fixtures/          sample_report.json -- build the UI against this, no key needed
+fixtures/          sample_report.json -- a report to develop against, no key needed
 decks/             the 10 test decks (gitignored, not ours to redistribute)
 out/               generated decks, reports, audio (gitignored)
 data/              working material (gitignored)
@@ -129,11 +140,13 @@ data/              working material (gitignored)
   demo/              the deliberately-degraded demo deck
   pdfs/              PDFs, out of scope -- kept to test rejection
   challenge/         Spark Challenge kickoff deck and workshop material
+  design-source.dc.html   the approved design the web UI was built from
 ```
 
-Docs: [STATUS.md](STATUS.md) full build review · [MODELS.md](MODELS.md) model IDs
-and why AIR · [INTEGRATION.md](INTEGRATION.md) the pipeline→UI contract ·
-[DEMO.md](DEMO.md) pitch script and what not to claim.
+Docs: [STATUS.md](STATUS.md) full build review, evidence and known limits ·
+[MODELS.md](MODELS.md) exact model IDs and why AIR ·
+[DEMO.md](DEMO.md) pitch script and what not to claim ·
+[NEXT_STEPS.md](NEXT_STEPS.md) hosting, the test checklist, and which decks to demo.
 
 ## How it works
 

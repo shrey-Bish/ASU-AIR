@@ -384,7 +384,7 @@ printf 'RC_LLM_API_KEY=%s\n' "$YOUR_KEY" > .env
 ```
 
 Docs: [README.md](README.md) overview and results · [MODELS.md](MODELS.md) model
-IDs and why AIR · [INTEGRATION.md](INTEGRATION.md) the pipeline→UI contract ·
+IDs and why AIR ·
 [DEMO.md](DEMO.md) the pitch script and what not to claim.
 
 ---

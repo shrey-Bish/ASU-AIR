@@ -134,7 +134,7 @@ async def upload(file: UploadFile = File(...)) -> JSONResponse:
     lower = name.lower()
 
     # Reject out-of-scope formats on the extension, before any pipeline work,
-    # with the same messages the CLI uses (see INTEGRATION.md).
+    # with the same messages the CLI uses.
     if lower.endswith(".pdf"):
         return _error(
             400,
