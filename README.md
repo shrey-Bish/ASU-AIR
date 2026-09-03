@@ -151,17 +151,17 @@ Three details that are easy to get wrong, all verified against real decks:
 Evaluated on **10 real university lecture decks** — eight ASU course decks
 (CSE 450, CSE 551, CSE 511, two machine-learning units, and **three PHY 111
 physics decks**), MIT's AI 101, and Stanford CS106B.
-**505 slides, 380 images, 478 seconds.**
+**505 slides, 380 images, 556 seconds.**
 
 | | Count |
 |---|---|
 | Images found | 380 |
-| Alt text applied automatically | 222 |
-| Marked decorative (silenced) | 141 |
-| Sent to human review | 17 |
+| Alt text applied automatically | 228 |
+| Marked decorative (silenced) | 122 |
+| Sent to human review | 30 |
 | WCAG issues detected (nothing modified) | 531 |
 
-Confidence spread: 232 at 5, 144 at 4, 4 at 3. Write-back verified in three
+Confidence spread: 238 at 5, 137 at 4, 4 at 3, 1 at 2. Write-back verified in three
 independent readers — reopened in `python-pptx` with zip integrity intact and
 the source unmodified, opened in **Keynote** with no repair prompt, and
 round-tripped through **LibreOffice Impress with all 23 descriptions preserved
@@ -208,8 +208,8 @@ logos, so it was rejected as a queue flood.
 
 ### The confidence gate
 
-17 images reached the review queue — 13 caught by the decorative guard above,
-4 by genuinely low confidence:
+30 images reached the review queue — most caught by the decorative guards above,
+the rest by genuinely low confidence:
 
 > "The image is extremely blurry and cropped, showing only a portion of what
 > appears to be the digit…"
@@ -222,9 +222,9 @@ confidence the right way — Gaussian blur r=6 → 3, r=14 → 2, both landing i
 review — so a low rate reflects clean source decks, not a dead gate.
 `scripts/make_review_demo.py` reproduces this on demand.
 
-On the threshold: the model returns 5 for 232 images and 4 for 144. Auto-applying
-4-and-above is a deliberate choice; requiring 5 would route another 144 images
-(38% of the corpus) to a human, which is more than a reviewer can absorb.
+On the threshold: the model returns 5 for 238 images and 4 for 137. Auto-applying
+4-and-above is a deliberate choice; requiring 5 would route another 137 images
+(36% of the corpus) to a human, which is more than a reviewer can absorb.
 
 ### Bugs found by running real decks
 

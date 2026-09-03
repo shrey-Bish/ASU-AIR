@@ -25,6 +25,14 @@ AUTO_APPLY_MIN_CONFIDENCE = 4
 # content-sized images without flooding the queue.
 DECORATIVE_MAX_AREA_FRACTION = 0.12
 
+# Second guard on the same decision, and the more reliable one. Size is a poor
+# proxy for importance -- a 1%-of-slide photograph can be the raw data in a
+# feature-extraction diagram. Flat graphics (logos, icons, arrows) are built
+# from a few colours; photographs have thousands. Measured on images verified by
+# eye: decorative art topped out at 843 distinct colours, teaching photographs
+# started at 3,324. The threshold sits in that gap.
+PHOTO_MIN_DISTINCT_COLOURS = 2000
+
 # Images are sent as base64 data URLs. Downscale first: an 833KB screenshot
 # costs latency and vision tokens without adding legible detail.
 MAX_IMAGE_EDGE_PX = 1280

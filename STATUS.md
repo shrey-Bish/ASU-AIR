@@ -150,17 +150,17 @@ negative; it had found 16 hyperlinks and judged all of them descriptive.
 ### Evaluation run — 10 real university decks
 
 Eight ASU course decks (five computer science, **three PHY 111 physics**), one MIT OpenCourseWare, one Stanford CS106B.
-**505 slides, 380 images, 478 seconds.**
+**505 slides, 380 images, 556 seconds.**
 
 | | Count |
 |---|---|
 | Images found | 380 |
-| Alt text applied automatically | 222 |
-| Marked decorative (silenced) | 141 |
-| Sent to human review | 17 |
+| Alt text applied automatically | 228 |
+| Marked decorative (silenced) | 122 |
+| Sent to human review | 30 |
 | WCAG issues detected | 531 |
 
-Confidence spread: 232 at 5, 144 at 4, 4 at 3. Every column above sums to the
+Confidence spread: 238 at 5, 137 at 4, 4 at 3, 1 at 2. Every column above sums to the
 per-deck table below.
 
 WCAG breakdown: 197 small text, 183 reading order, 148 missing titles,
@@ -183,11 +183,19 @@ crawling baby were called decorative on slides reading *"1. Define a problem"*,
 course those animals **are** the teaching content; silencing them deletes the
 slide's point, and by design it never reached a human.
 
-**Fix, now shipped:** a decorative verdict is not trusted on its own. Any image
-covering more than 12% of the slide goes to review with the reason stated.
-Verified logos and template icons measure 2–8.6% and are unaffected. It catches
-9 of the 12 AI 101 misclassifications, not all of them — see the README for why,
-and what that costs. It reroutes 9% of previously-silenced images.
+**Fix, now shipped:** a decorative verdict is checked against two independent
+signals, and failing either sends the image to a human instead of silencing it.
+
+* **Size** — anything over 12% of the slide. Logos and dividers are small; a
+  chart is not.
+* **Photograph or flat graphic** — the better of the two. Size alone missed a
+  **1%-of-slide dog photograph** that was the raw input in a feature-extraction
+  diagram: tiny, and entirely the point of the slide. Measured on images
+  verified by eye, decorative art tops out at **843 distinct colours** while
+  teaching photographs start at **3,324**. The threshold sits in that gap.
+
+Together these reroute 30 images. The AI 101 misclassifications are now all
+caught, including the 6.7% cat that the size guard alone missed.
 
 Working through on MIT AI 101, the deck where the problem was found: decorative
 went **11 → 2** and review **0 → 11**, which is the nine rerouted images plus
@@ -199,17 +207,17 @@ runs. Worth knowing before quoting any single number to a decimal place.
 
 | Deck | Slides | Images | Applied | Decor. | Review | WCAG | Time |
 |---|---|---|---|---|---|---|---|
-| ASU CSE 450 — algorithms | 66 | 10 | 4 | 5 | 1 | 114 | 16.7s |
-| ASU CSE 551 — algorithms | 60 | 6 | 0 | 6 | 0 | 131 | 14.2s |
-| **ASU PHY 111 — physics ch.5** | 29 | 24 | 23 | 0 | 1 | 29 | 47.5s |
-| ASU CSE 511 — data processing | 49 | 91 | 47 | 41 | 3 | 54 | 50.7s |
-| ASU — intro machine learning | 19 | 23 | 8 | 15 | 0 | 6 | 24.0s |
-| ASU — unsupervised learning | 37 | 22 | 15 | 7 | 0 | 14 | 67.7s |
-| **ASU PHY 111 — physics ch.2 pt1** | 47 | 23 | 23 | 0 | 0 | 19 | 63.8s |
-| **ASU PHY 111 — physics ch.2 pt2** | 42 | 33 | 33 | 0 | 0 | 32 | 66.6s |
-| MIT AI 101 — EECS | 54 | 77 | 64 | 2 | 11 | 48 | 74.4s |
-| Stanford CS106B — fundamentals | 102 | 71 | 5 | 65 | 1 | 84 | 50.2s |
-| **Total** | **505** | **380** | **222** | **141** | **17** | **531** | **478s** |
+| ASU CSE 450 — algorithms | 66 | 10 | 2 | 5 | 3 | 114 | 36.6s |
+| ASU CSE 551 — algorithms | 60 | 6 | 0 | 6 | 0 | 131 | 20.8s |
+| **ASU PHY 111 — physics ch.5** | 29 | 24 | 23 | 0 | 1 | 29 | 62.2s |
+| ASU CSE 511 — data processing | 49 | 91 | 51 | 35 | 5 | 54 | 64.5s |
+| ASU — intro machine learning | 19 | 23 | 8 | 4 | 11 | 6 | 50.4s |
+| ASU — unsupervised learning | 37 | 22 | 15 | 7 | 0 | 14 | 26.4s |
+| **ASU PHY 111 — physics ch.2 pt1** | 47 | 23 | 23 | 0 | 0 | 19 | 45.5s |
+| **ASU PHY 111 — physics ch.2 pt2** | 42 | 33 | 33 | 0 | 0 | 32 | 92.4s |
+| MIT AI 101 — EECS | 54 | 77 | 68 | 0 | 9 | 48 | 97.2s |
+| Stanford CS106B — fundamentals | 102 | 71 | 5 | 65 | 1 | 84 | 58.6s |
+| **Total** | **505** | **380** | **228** | **122** | **30** | **531** | **556s** |
 
 **The three physics decks silenced nothing — 0 decorative across 80 images, 79
 of 80 described.** That is the right answer: PHY 111 slides are motion diagrams,
@@ -245,7 +253,7 @@ audio files for the pitch video.
 
 ### The confidence gate fires on real input
 
-17 review items: 13 from the decorative guard, 4 genuine low confidence:
+30 review items, most from the decorative guards, the rest genuine low confidence:
 
 > "The image is extremely blurry and cropped, showing only a portion of what
 > appears to be the digit…"
@@ -255,9 +263,9 @@ audio files for the pitch video.
 
 The second is the cross-check catching the model leaning on slide text.
 
-**On the threshold.** The model answers 5 for 232 images and 4 for 144.
-Auto-applying 4-and-above is deliberate: requiring 5 would send another 144
-images — **38% of the corpus** — to a human, far more than a reviewer can
+**On the threshold.** The model answers 5 for 238 images and 4 for 137.
+Auto-applying 4-and-above is deliberate: requiring 5 would send another 137
+images — **36% of the corpus** — to a human, far more than a reviewer can
 absorb. If a
 judge asks whether a gate that rarely fires is doing real work, the calibration
 table above is the answer — it responds to degradation, so a low rate means

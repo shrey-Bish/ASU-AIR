@@ -23,7 +23,9 @@ from slidesight.pipeline import remediate  # noqa: E402
 
 async def run(deck_dir: Path, out_dir: Path, concurrency: int) -> dict:
     out_dir.mkdir(parents=True, exist_ok=True)
-    decks = sorted(deck_dir.glob("*.pptx"))
+    # Skip Office lock files (~$name.pptx) -- PowerPoint creates one for every
+    # open document, and they are not decks.
+    decks = sorted(d for d in deck_dir.glob("*.pptx") if not d.name.startswith("~$"))
     if not decks:
         raise SystemExit(f"no .pptx files in {deck_dir}")
 

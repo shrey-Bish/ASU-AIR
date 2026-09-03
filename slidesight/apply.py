@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import Any
 
 from . import config
+from .describe import is_photographic
 from .extract import ImageRef, set_alt_text
 
 ACTION_AUTO = "auto_applied"
@@ -20,7 +21,11 @@ ACTION_REVIEW = "review_queue"
 ACTION_DECORATIVE = "decorative_empty_alt"
 
 
-def triage(result: dict[str, Any], area_fraction: float | None = None) -> str:
+def triage(
+    result: dict[str, Any],
+    area_fraction: float | None = None,
+    photographic: bool = False,
+) -> str:
     """Route a description to one of the three outcomes.
 
     The confidence gate protects descriptions, but on its own nothing protects
@@ -28,16 +33,22 @@ def triage(result: dict[str, Any], area_fraction: float | None = None) -> str:
     gets read and corrected; a wrongly-silenced diagram is removed from the
     blind student's experience entirely and never reaches a human.
 
-    So a decorative call on a large image is not trusted. Anything occupying
-    more than ``DECORATIVE_MAX_AREA_FRACTION`` of the slide goes to review
-    instead of being silenced. Logos, icons and dividers are small; a memory
-    diagram or a chart is not.
+    So a decorative verdict is checked against two independent signals, and
+    fails either one it goes to a human instead of being silenced:
+
+    * **Size.** Anything covering more than ``DECORATIVE_MAX_AREA_FRACTION`` of
+      the slide. Logos and dividers are small; a chart is not.
+    * **Photograph or flat graphic.** The better signal of the two. Size alone
+      missed a 1%-of-slide dog photograph that was the raw input in a
+      feature-extraction diagram -- tiny, and entirely the point of the slide.
+      Logos and icons are a few flat colours; photographs are thousands.
     """
     if result.get("decorative"):
-        if (
+        too_big = (
             area_fraction is not None
             and area_fraction > config.DECORATIVE_MAX_AREA_FRACTION
-        ):
+        )
+        if too_big or photographic:
             return ACTION_REVIEW
         return ACTION_DECORATIVE
     if result.get("confidence", 0) >= config.AUTO_APPLY_MIN_CONFIDENCE:
@@ -47,14 +58,22 @@ def triage(result: dict[str, Any], area_fraction: float | None = None) -> str:
 
 def make_record(image: ImageRef, result: dict[str, Any]) -> dict[str, Any]:
     """Build one row of the JSON contract shared with the UI."""
-    action = triage(result, image.area_fraction)
+    photographic = is_photographic(image.blob) if image.blob else False
+    action = triage(result, image.area_fraction, photographic)
     reason = result.get("reason")
     if action == ACTION_REVIEW and result.get("decorative"):
         pct = (image.area_fraction or 0) * 100
-        note = (
-            f"model called this decorative, but it covers {pct:.0f}% of the "
-            "slide -- too large to silence without a human looking"
-        )
+        if photographic:
+            note = (
+                "model called this decorative, but it is a photograph, not a "
+                "logo or icon -- photographs on a lecture slide are usually the "
+                "example being taught"
+            )
+        else:
+            note = (
+                f"model called this decorative, but it covers {pct:.0f}% of the "
+                "slide -- too large to silence without a human looking"
+            )
         reason = f"{reason} | {note}" if reason else note
     return {
         "slide": image.slide,

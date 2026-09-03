@@ -1,17 +1,23 @@
 {
-  "decks_attempted": 10,
+  "decks_attempted": 11,
   "decks_succeeded": 10,
-  "failures": [],
+  "failures": [
+    {
+      "deck": "~$U1_Introduction to Machine Learning (1).pptx",
+      "error": "ValueError: ~$U1_Introduction to Machine Learning (1).pptx is not a readable .pptx file (PackageNotFoundError)."
+    }
+  ],
   "slides": 505,
   "images_found": 380,
-  "auto_applied": 222,
-  "decorative": 141,
-  "review_queue": 17,
+  "auto_applied": 228,
+  "decorative": 122,
+  "review_queue": 30,
   "tables_detected": 4,
   "confidence_spread": {
+    "2": 1,
     "3": 4,
-    "4": 144,
-    "5": 232
+    "4": 137,
+    "5": 238
   },
   "wcag_by_check": {
     "small_text": 197,
@@ -20,17 +26,17 @@
     "table_no_header": 3
   },
   "wcag_total": 531,
-  "total_runtime_seconds": 477.7,
+  "total_runtime_seconds": 556.4,
   "per_deck": [
     {
       "deck": "CSE450_Unit2_Spring2019_(SchedulingPartitioning, MinimizeLateness, GreedyAlg).pptx",
       "slides": 66,
       "images": 10,
-      "auto_applied": 4,
+      "auto_applied": 2,
       "decorative": 5,
-      "review_queue": 1,
+      "review_queue": 3,
       "wcag_issues": 114,
-      "runtime_seconds": 16.7
+      "runtime_seconds": 36.6
     },
     {
       "deck": "CSE551_Unit1_Spring2019_(StableMatching, ProposeReject, FiveRepresentative).pptx",
@@ -40,7 +46,7 @@
       "decorative": 6,
       "review_queue": 0,
       "wcag_issues": 131,
-      "runtime_seconds": 14.2
+      "runtime_seconds": 20.8
     },
     {
       "deck": "Chapter 5 (PHY 111, online instruction Part 2).pptx",
@@ -50,27 +56,27 @@
       "decorative": 0,
       "review_queue": 1,
       "wcag_issues": 29,
-      "runtime_seconds": 47.5
+      "runtime_seconds": 62.2
     },
     {
       "deck": "September 8th-CSE 511.pptx",
       "slides": 49,
       "images": 91,
-      "auto_applied": 47,
-      "decorative": 41,
-      "review_queue": 3,
+      "auto_applied": 51,
+      "decorative": 35,
+      "review_queue": 5,
       "wcag_issues": 54,
-      "runtime_seconds": 50.7
+      "runtime_seconds": 64.5
     },
     {
       "deck": "U1_Introduction to Machine Learning (1).pptx",
       "slides": 19,
       "images": 23,
       "auto_applied": 8,
-      "decorative": 15,
-      "review_queue": 0,
+      "decorative": 4,
+      "review_queue": 11,
       "wcag_issues": 6,
-      "runtime_seconds": 24.0
+      "runtime_seconds": 50.4
     },
     {
       "deck": "U6-Unsupervised Learning - Clustering-1.pptx",
@@ -80,7 +86,7 @@
       "decorative": 7,
       "review_queue": 0,
       "wcag_issues": 14,
-      "runtime_seconds": 67.7
+      "runtime_seconds": 26.4
     },
     {
       "deck": "chapter2 for online instruction Part 1 (student).pptx",
@@ -90,7 +96,7 @@
       "decorative": 0,
       "review_queue": 0,
       "wcag_issues": 19,
-      "runtime_seconds": 63.8
+      "runtime_seconds": 45.5
     },
     {
       "deck": "chapter2 for online instruction part 2 (student).pptx",
@@ -100,17 +106,17 @@
       "decorative": 0,
       "review_queue": 0,
       "wcag_issues": 32,
-      "runtime_seconds": 66.6
+      "runtime_seconds": 92.4
     },
     {
       "deck": "mit_ai101_eecs.pptx",
       "slides": 54,
       "images": 77,
-      "auto_applied": 64,
-      "decorative": 2,
-      "review_queue": 11,
+      "auto_applied": 68,
+      "decorative": 0,
+      "review_queue": 9,
       "wcag_issues": 48,
-      "runtime_seconds": 74.4
+      "runtime_seconds": 97.2
     },
     {
       "deck": "stanford_cs106b_fundamentals.pptx",
@@ -120,7 +126,7 @@
       "decorative": 65,
       "review_queue": 1,
       "wcag_issues": 84,
-      "runtime_seconds": 50.2
+      "runtime_seconds": 58.6
     }
   ]
 }
