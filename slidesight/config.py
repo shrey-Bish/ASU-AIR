@@ -18,6 +18,13 @@ MODEL_TEXT = "gemma4-31b-it"
 # to a hundred points and cluster meaninglessly at 85/90/95.
 AUTO_APPLY_MIN_CONFIDENCE = 4
 
+# A "decorative" verdict silences an image permanently and never reaches a
+# human, so it is not trusted on large images. Above this fraction of the slide
+# area, a decorative call is routed to review instead. Measured against real
+# decks: logos and template icons run 1-8% of slide area, so this fires on
+# content-sized images without flooding the queue.
+DECORATIVE_MAX_AREA_FRACTION = 0.12
+
 # Images are sent as base64 data URLs. Downscale first: an 833KB screenshot
 # costs latency and vision tokens without adding legible detail.
 MAX_IMAGE_EDGE_PX = 1280

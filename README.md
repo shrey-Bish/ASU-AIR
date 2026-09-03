@@ -130,77 +130,93 @@ Three details that are easy to get wrong, all verified against real decks:
 ## Results
 
 Evaluated on **9 real university lecture decks** — five ASU course decks
-(CSE 450 algorithms, CSE 551 algorithms, CSE 511 data processing, and two
-machine-learning units), two MIT OpenCourseWare decks (AI 101, CMS.595 Media
-Studies), and two Stanford CS106B decks. **517 slides, 405 images, 514
-seconds.**
+(CSE 450, CSE 551, CSE 511, and two machine-learning units), two MIT
+OpenCourseWare decks (AI 101, CMS.595), and two Stanford CS106B decks.
+**517 slides, 405 images, 401 seconds.**
 
 | | Count |
 |---|---|
 | Images found | 405 |
-| Alt text applied automatically | 213 |
-| Marked decorative (silenced) | 187 |
-| Sent to human review | 5 |
+| Alt text applied automatically | 206 |
+| Marked decorative (silenced) | 180 |
+| Sent to human review | 19 |
 | WCAG issues detected (nothing modified) | 590 |
 
-Confidence spread: 274 at 5, 126 at 4, 2 at 3, 3 at 2. Alt text was confirmed to
-persist after save and reopen, with zip integrity intact and source files
-unmodified. A remediated deck opens in Keynote with no repair prompt.
+Confidence spread: 281 at 5, 121 at 4, 3 at 3. Write-back verified in three
+independent readers — reopened in `python-pptx` with zip integrity intact and
+the source unmodified, opened in **Keynote** with no repair prompt, and
+round-tripped through **LibreOffice Impress with all 23 descriptions preserved
+byte-identical**. **PowerPoint itself has not been tested** — it is not
+installed on the dev machine.
 
-WCAG issues by check: 240 instances of text under 18pt, 210 slides that read out
-of visual order, 135 missing slide titles, 3 tables with no header row, 2 vague
-link texts.
+### Silencing an image is the dangerous decision
 
-### The confidence gate, on real input
+A bad description gets read by a human and fixed. A wrongly-silenced diagram is
+removed from the blind student's experience entirely — and a confidence gate on
+descriptions does nothing to protect it.
 
-All five review items are genuine low confidence, and four came from one ASU
-deck (CSE 511):
+We found this the hard way. Reviewing the images the model called decorative,
+most were exactly right: Stanford CS106B's *fundamentals* deck silenced 66
+images, but those are only **5 unique pictures** — a briefcase icon repeated 37
+times, an arrow 26 times, plus the Stanford seal, the C++ logo and a stock
+photo. Without silencing, a student hears "briefcase" thirty-seven times.
+
+But MIT's AI 101 deck was a different story. Photographs of cats, dogs and a
+crawling baby were called decorative — on slides reading *"1. Define a
+problem"*, *"6. Test the model"*, and *"three types of learning: supervised,
+unsupervised, reinforcement"*. In a machine-learning course **those animals are
+the teaching content**. Silencing them deletes the point of the slide.
+
+So a decorative verdict is no longer trusted on its own. Any image covering more
+than 12% of the slide goes to human review instead of being silenced, with the
+reason stated. Logos and template icons run 1–8% of slide area and are
+unaffected; this reroutes 9% of previously-silenced images, including every one
+of the AI 101 misclassifications.
+
+### The confidence gate
+
+19 images reached the review queue — 16 caught by the decorative guard above,
+3 by genuinely low confidence:
 
 > "The image is extremely blurry and cropped, showing only a portion of what
-> appears to be the digit..."
+> appears to be the digit…"
 
-> "The description infers context (data records in external storage) from the
-> lecture topic and slide text rather than reading it in the image."
+> "The description infers context from the lecture topic and slide text rather
+> than reading it in the image."
 
-That second one is the cross-check working: the model is caught leaning on the
-slide text instead of the image, and the image goes to a human.
+The gate was calibrated rather than assumed. Degrading a known image moves
+confidence the right way — Gaussian blur r=6 → 3, r=14 → 2, both landing in
+review — so a low rate reflects clean source decks, not a dead gate.
+`scripts/make_review_demo.py` reproduces this on demand.
 
-### The decorative result
+On the threshold: the model returns 5 for 281 images and 4 for 121. Auto-applying
+4-and-above is a deliberate choice; requiring 5 would route another 121 images
+(30% of the corpus) to a human, which is more than a reviewer can absorb.
 
-Stanford CS106B's *fundamentals* deck has 71 images, of which **66 are
-decorative** — the Stanford seal plus a briefcase icon repeated across roughly
-40 slides. Without this, a blind student hears "briefcase" forty times in one
-lecture.
+### Bugs found by running real decks
 
-### What did not work
+Every one of these was found by running real material, not by reading code.
 
-**The gate fires rarely — 5 in 405 images.** Real lecture decks are mostly
-clean, so this is honest rather than broken, and we deliberately did not raise
-the threshold to manufacture a queue. We verified the gate *can* fire by
-degrading a known image in measured steps: Gaussian blur r=6 drops confidence to
-3, r=14 to 2, both landing in the review queue. `scripts/make_review_demo.py`
-builds a deck with exactly one image degraded, for demonstrating this honestly.
+| Bug | Effect | Fix |
+|---|---|---|
+| Decorative verdicts were never second-guessed | Teaching photos in an AI course silently deleted from the accessible version | Decorative calls on images >12% of slide area go to review |
+| TIFF and BMP rejected as "unsupported" | 26 images went to review as failures — a queue full of items a human could not act on | Re-encoded via Pillow; only undecodable vector art now goes to review |
+| Replies truncated by the token limit were discarded | 3 good descriptions reported as low-confidence failures | Salvage fields from partial JSON; token cap raised |
+| Model copied values from slide text | Confident invented values on an illegible image | Model reports what it can literally read; mechanical cross-check caps confidence at 3 |
+| Decorative decided *after* describing | 1 of 15 images silenced; 5 logos described at confidence 5 | Decide decorative first — 8 of 15 silenced, runtime halved |
+| `notes_text_frame` can be `None` | Extraction crashed on one deck | Guard for `None` |
+| PDFs and mislabelled files | Raw `python-pptx` traceback | Plain-English errors; four cases tested |
 
-**The model leans on slide text.** Given an illegible image plus the real slide
-text, it reported values it could not possibly read. Given the *same* image with
-text from an unrelated lecture, it described the wrong subject entirely. It now
-reports what it can literally read, and a mechanical check caps confidence at 3
-when a description quotes values absent from that list but present in the slide
-text. A well-matched caption can still slip a wrong description past the gate.
+### Still not proven
 
-**Three bugs this evaluation caught**, all fixed:
-- A deck whose notes slide had no notes placeholder crashed extraction.
-- 26 TIFF images in one deck were routed to review as "unsupported" when Pillow
-  decodes them fine — a review queue full of things a human could not act on.
-- Replies truncated by the token limit were discarded, reporting three good
-  descriptions as failures. They are now salvaged, and the cap was raised.
-
-**Not fully verified:** a remediated deck opens correctly in Keynote, but
-**PowerPoint itself has not been tested** — it is not installed on the dev
-machine — and no screen reader has been run end to end. See [DEMO.md](DEMO.md).
-
-**Department coverage is thin.** 9 decks, heavily computer science. PLAN.md asks
-for 20–30 across five or more departments.
+- **No screen reader has been run end to end.** The XML is right and three
+  readers preserve it, but nobody has heard VoiceOver or NVDA read a remediated
+  deck. Steps are in [DEMO.md](DEMO.md).
+- **The model can still be fooled.** An illegible image paired with *matching*
+  slide text can carry a wrong description past the gate. Mitigated, not
+  eliminated.
+- **Coverage is thin** — 9 decks, heavily computer science. PLAN.md asks for
+  20–30 across five or more departments.
 
 ## Accessibility report
 

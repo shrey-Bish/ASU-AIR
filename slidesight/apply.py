@@ -20,9 +20,25 @@ ACTION_REVIEW = "review_queue"
 ACTION_DECORATIVE = "decorative_empty_alt"
 
 
-def triage(result: dict[str, Any]) -> str:
-    """Route a description to one of the three outcomes."""
+def triage(result: dict[str, Any], area_fraction: float | None = None) -> str:
+    """Route a description to one of the three outcomes.
+
+    The confidence gate protects descriptions, but on its own nothing protects
+    a *decorative* verdict -- and that is the more harmful mistake. Bad alt text
+    gets read and corrected; a wrongly-silenced diagram is removed from the
+    blind student's experience entirely and never reaches a human.
+
+    So a decorative call on a large image is not trusted. Anything occupying
+    more than ``DECORATIVE_MAX_AREA_FRACTION`` of the slide goes to review
+    instead of being silenced. Logos, icons and dividers are small; a memory
+    diagram or a chart is not.
+    """
     if result.get("decorative"):
+        if (
+            area_fraction is not None
+            and area_fraction > config.DECORATIVE_MAX_AREA_FRACTION
+        ):
+            return ACTION_REVIEW
         return ACTION_DECORATIVE
     if result.get("confidence", 0) >= config.AUTO_APPLY_MIN_CONFIDENCE:
         return ACTION_AUTO
@@ -31,14 +47,22 @@ def triage(result: dict[str, Any]) -> str:
 
 def make_record(image: ImageRef, result: dict[str, Any]) -> dict[str, Any]:
     """Build one row of the JSON contract shared with the UI."""
-    action = triage(result)
+    action = triage(result, image.area_fraction)
+    reason = result.get("reason")
+    if action == ACTION_REVIEW and result.get("decorative"):
+        pct = (image.area_fraction or 0) * 100
+        note = (
+            f"model called this decorative, but it covers {pct:.0f}% of the "
+            "slide -- too large to silence without a human looking"
+        )
+        reason = f"{reason} | {note}" if reason else note
     return {
         "slide": image.slide,
         "image_id": image.image_id,
         "alt_text": result.get("description", ""),
         "confidence": result.get("confidence", 1),
         "decorative": bool(result.get("decorative")),
-        "reason": result.get("reason"),
+        "reason": reason,
         "action": action,
     }
 

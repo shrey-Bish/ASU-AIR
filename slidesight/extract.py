@@ -43,6 +43,9 @@ class ImageRef:
     context: SlideContext
     existing_alt: str = ""
     existing_title: str = ""
+    # How much of the slide this image covers, 0-1. Used to decide whether a
+    # "decorative" verdict is safe to act on without a human.
+    area_fraction: float | None = None
     shape: object = field(default=None, repr=False)
 
 
@@ -108,9 +111,23 @@ def slide_context(slide, number: int) -> SlideContext:
     )
 
 
+def _area_fraction(shape, slide_area: int | None) -> float | None:
+    """Share of the slide this shape covers, or None if it cannot be measured."""
+    if not slide_area:
+        return None
+    try:
+        return (int(shape.width) * int(shape.height)) / slide_area
+    except (TypeError, ValueError):
+        return None
+
+
 def extract_images(prs: Presentation) -> list[ImageRef]:
     """Every picture in the deck, in slide order, with its slide's context."""
     images: list[ImageRef] = []
+    try:
+        slide_area = int(prs.slide_width) * int(prs.slide_height)
+    except (TypeError, ValueError):
+        slide_area = None
     for index, slide in enumerate(prs.slides, start=1):
         context = slide_context(slide, index)
         for shape in walk(slide.shapes):
@@ -132,6 +149,7 @@ def extract_images(prs: Presentation) -> list[ImageRef]:
                     context=context,
                     existing_alt=attrib.get("descr", ""),
                     existing_title=attrib.get("title", ""),
+                    area_fraction=_area_fraction(shape, slide_area),
                     shape=shape,
                 )
             )
