@@ -1,6 +1,6 @@
 # SlideSight — build status and review
 
-Written 3 Sep 2026, 3:00 PM MST. Code freeze 6 PM, submission 11:59 PM.
+Written 3 Sep 2026, 4:51 PM MST. Code freeze 6 PM, submission 11:59 PM.
 
 This is the honest state of the project: what exists, how it works, what has
 been proven, what has not, and what is still owed. Read the "Not proven" and
@@ -10,9 +10,9 @@ been proven, what has not, and what is still owed. Read the "Not proven" and
 
 ## 1. What it does
 
-A professor uploads a `.pptx`. SlideSight finds every image, writes real alt
-text using a vision model on ASU Research Computing hardware, and writes it back
-into the file. It applies only what the model is confident about; everything
+A professor uploads a `.pptx` — in the browser app or from the command line.
+SlideSight finds every image, writes real alt text using a vision model on ASU
+Research Computing hardware, and writes it back into the file. It applies only what the model is confident about; everything
 else is held for a human. It also detects five other accessibility problems and
 reports them without touching them.
 
@@ -47,14 +47,16 @@ on-premise inference are the parts that are ours.
 | Contrast check | ❌ Cut, deliberately (see §7) |
 | Second "critique" pass | ❌ Cut, deliberately (see §7) |
 | Batch evaluation harness | ✅ Done |
-| Streamlit UI | ⬜ Person B, not started here |
+| Web app (upload → review → download) | ✅ Done, verified end to end |
+| Review queue: thumbnails + approve-to-file | ✅ Done |
 | VoiceOver run end to end | ⬜ **Not done — needs a human keypress** |
-| Tested in real PowerPoint | ⬜ **Not done — not installed** |
+| Opens in real PowerPoint | ✅ Installed; both decks open with no repair prompt |
+| Alt Text pane confirmed in PowerPoint | ⬜ **Needs a human to look** |
 | Pitch deck / video / written answers | ⬜ **Not started** |
 | Progress report filed | ⬜ **Still open — do this first** |
 | Team size 3–5 vs our 2 | ✅ Confirmed OK |
 
-19 commits, ~1627 lines of Python. Repo:
+25 commits, ~2266 lines of Python (pipeline, server and scripts). Repo:
 [github.com/shrey-Bish/ASU-AIR](https://github.com/shrey-Bish/ASU-AIR)
 
 ---
@@ -77,15 +79,23 @@ on-premise inference are the parts that are ours.
 | `slidesight/cli.py` | 162 | Command line, progress output, input validation. |
 | `scripts/evaluate.py` | 122 | Batch-runs a folder of decks, writes the summary the results table comes from. |
 | `scripts/make_review_demo.py` | 124 | Builds a deliberately degraded deck — kept as calibration evidence. |
+| `server/main.py` + `jobs.py` | 400 | FastAPI: upload, progress, thumbnails, approve, download. Runs each job on a worker thread so the model calls do not starve the event loop. |
+| `web/` (html, css, js) | 700 | The browser UI, built from the approved design and served by the same app. |
 | `scripts/screen_reader_preview.py` | 98 | Speaks what a screen reader announces before and after, via the macOS `say` voice. Can save audio for the video. |
 
 ### Where things live
 
 ```
-slidesight/  the package        scripts/   evaluate · make_review_demo · screen_reader_preview
-fixtures/    sample report      decks/     the 10 test decks
-out/         generated output   data/      legacy-ppt · demo · pdfs · challenge
+slidesight/  the pipeline       server/     FastAPI app (upload, review, approve, download)
+web/         the browser UI     scripts/    evaluate · make_review_demo · screen_reader_preview
+fixtures/    sample report      decks/      the 10 test decks
+demo-decks/  the 2 demo decks   out/        generated output
+data/        legacy-ppt · demo · pdfs · challenge · design-source
 ```
+
+`decks/`, `out/` and `data/` are gitignored. `demo-decks/` is **not** — the two
+demo decks are committed so the team can pull them, and they are ASU course
+material that should come out before the repo is shared widely.
 
 `decks/`, `out/` and `data/` are gitignored — the decks are not ours to
 redistribute. The repo carries code, docs, and `out/eval/eval_summary.json` as
@@ -225,6 +235,22 @@ graphs and worked equations, with no logo furniture. Set against Stanford
 CS106B, where 65 of 71 images are template icons, it is evidence the classifier
 tracks what an image *is* rather than firing at a fixed rate.
 
+### The web app, verified end to end
+
+Upload → progress → review → download, exercised against the real API on the ASU
+machine-learning deck: 23 images, 8 applied, 4 silenced, **11 to review**. A
+thumbnail loads for each review item, editing the draft and approving writes the
+text into the deck, and downloading returns a file that contains it.
+
+Two things that had to be fixed to get there, both in the handover code:
+
+- **Job ids did not match.** Upload minted one id for the temp directory while
+  the registry minted another internally, so the id handed to the browser
+  addressed nothing and every poll returned 404. Nothing would have worked.
+- **The review queue had no backend.** The design has an approve button, but
+  there was no endpoint to write a description or to show the image being
+  judged. Both added.
+
 ### Write-back verified in three independent readers
 
 - **python-pptx** — reopened after save: 23/23 alt texts present, zip integrity
@@ -312,9 +338,11 @@ real material rather than by reading the code.
 - **No screen reader has been run end to end.** The XML is right and three
   readers preserve it, but nobody has heard VoiceOver or NVDA read a remediated
   deck. Steps are in [DEMO.md](DEMO.md); it needs a human keypress (⌘F5).
-- **PowerPoint itself is untested.** It is not installed on the dev machine and
-  installing needs an admin password: `brew install --cask microsoft-powerpoint`.
-  Keynote and LibreOffice both work.
+- **PowerPoint opens the files, but the Alt Text pane has not been eyeballed.**
+  PowerPoint 16.112 is now installed, and both the original and remediated decks
+  open with no repair prompt. What nobody has done is right-click an image →
+  View Alt Text and confirm the description is sitting there. Ten seconds, and
+  it converts "verified in three OOXML readers" into "verified in PowerPoint".
 - **The model can still be fooled.** Given an illegible image plus *matching*
   slide text, a well-worded caption can carry a wrong description past the gate.
   Mitigated, not eliminated. This is the most important known weakness.
@@ -357,7 +385,8 @@ analysis is worth more than twenty without one.
 
 | Item | Owner |
 |---|---|
-| Streamlit UI — upload, progress, review queue, download | Person B |
+| ~~UI — upload, progress, review queue, download~~ | ✅ Built and wired |
+| Host it, test it, run the demo decks | Person B — see [NEXT_STEPS.md](NEXT_STEPS.md) |
 | Screen reader test on before/after | Person B (plan §12) |
 | ~~More decks, more departments~~ | Dropped — 10 decks with a false-positive analysis beats 20 without |
 
@@ -384,8 +413,8 @@ printf 'RC_LLM_API_KEY=%s\n' "$YOUR_KEY" > .env
 ```
 
 Docs: [README.md](README.md) overview and results · [MODELS.md](MODELS.md) model
-IDs and why AIR ·
-[DEMO.md](DEMO.md) the pitch script and what not to claim.
+IDs and why AIR · [DEMO.md](DEMO.md) the pitch script and what not to claim ·
+[NEXT_STEPS.md](NEXT_STEPS.md) hosting, the test checklist, and the two demo decks.
 
 ---
 
@@ -393,11 +422,13 @@ IDs and why AIR ·
 
 1. **File the progress report.** Ten minutes, still open, and the plan says
    missing it risks disqualification.
-2. Run VoiceOver once on a before/after deck and record it — the one claim still
-   unverified. Installing PowerPoint (`brew install --cask microsoft-powerpoint`,
-   needs an admin password) would also close the untested-in-PowerPoint gap.
-3. Person B: the review queue is the centrepiece. Make it the first thing on
-   screen, not below the fold.
+2. **Two checks in PowerPoint, ten minutes total.** Right-click the image on
+   slide 13 of a remediated deck → View Alt Text, and confirm the description is
+   there. Then ⌘F5 and hear it. Both decks are already open. That closes the
+   last unverified claim and gives you the video's best fifteen seconds.
+3. **Person B: host it and run the checklist** in [NEXT_STEPS.md](NEXT_STEPS.md).
+   Demo from localhost — hosting adds risk on the day and buys nothing a judge
+   sees.
 4. **Not** more decks. Ten decks with a false-positive analysis beats twenty
    without one. The coverage gap belongs on the limitations slide, not in the
    remaining hours.
