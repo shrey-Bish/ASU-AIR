@@ -45,8 +45,12 @@ class JobRegistry:
     # -- lifecycle ---------------------------------------------------------
 
     def create_job(self, filename: str, total_slides: int | None = None,
-                   total_images: int | None = None) -> dict[str, Any]:
-        job_id = uuid.uuid4().hex
+                   total_images: int | None = None,
+                   job_id: str | None = None) -> dict[str, Any]:
+        # The caller may pass an id it has already used for the job's temp
+        # directory; without that the registry would mint a second id and the
+        # id handed to the client would address nothing.
+        job_id = job_id or uuid.uuid4().hex
         job: dict[str, Any] = {
             "job_id": job_id,
             "filename": filename,

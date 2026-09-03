@@ -49,6 +49,21 @@ RC_LLM_API_KEY=your-key-here
 
 ## Use
 
+### The web app
+
+```bash
+.venv/bin/python -m uvicorn server.main:app --port 8000
+```
+
+Open <http://127.0.0.1:8000>. Four steps: upload a deck, watch descriptions
+being written, work the review queue, download the result. The review queue is
+the point — those descriptions were deliberately **not** written, and approving
+one is what puts it in the file. Edit the draft first if it is wrong.
+
+A run is addressable: `?job=<id>` reopens it, so refreshing does not lose work.
+
+### The command line
+
 ```bash
 .venv/bin/python -m slidesight lecture.pptx -o out/lecture.remediated.pptx
 ```
@@ -103,6 +118,8 @@ the UI:
 
 ```
 slidesight/        the package -- extract, describe, apply, wcag, pipeline, cli
+server/            FastAPI app: upload, progress, review, approve, download
+web/               the browser UI (index.html, style.css, app.js)
 scripts/           evaluate.py, make_review_demo.py, screen_reader_preview.py
 fixtures/          sample_report.json -- build the UI against this, no key needed
 decks/             the 10 test decks (gitignored, not ours to redistribute)

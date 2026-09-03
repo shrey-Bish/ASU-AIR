@@ -33,13 +33,14 @@ import threading
 import uuid
 from pathlib import Path
 
-from fastapi import FastAPI, File, UploadFile
+from fastapi import Body, FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.staticfiles import StaticFiles
 from pptx import Presentation
 
 from slidesight import remediate
-from slidesight.extract import extract_images
+from slidesight.extract import extract_images, set_alt_text
 
 from . import config
 from .jobs import registry
@@ -168,7 +169,9 @@ async def upload(file: UploadFile = File(...)) -> JSONResponse:
 
     total_slides, total_images = _prescan_totals(input_path)
     output_path = job_dir / f"remediated_{name}"
-    registry.create_job(name, total_slides=total_slides, total_images=total_images)
+    registry.create_job(
+        name, total_slides=total_slides, total_images=total_images, job_id=job_id
+    )
 
     worker = threading.Thread(
         target=_run_job, args=(job_id, input_path, output_path),
@@ -233,6 +236,107 @@ async def report(job_id: str):
     if job["status"] != "complete" or job["report"] is None:
         return _error(404, f"Job {job_id} is {job['status']}; no report yet.")
     return job["report"]
+
+
+def _find_image(prs, slide_no: int, image_id: str):
+    """Locate one picture by (slide, image_id) in an open Presentation."""
+    slides = list(prs.slides)
+    if not 1 <= slide_no <= len(slides):
+        return None
+    for image in extract_images(prs):
+        if image.slide == slide_no and image.image_id == image_id:
+            return image
+    return None
+
+
+@app.get("/api/jobs/{job_id}/thumb/{slide_no}/{image_id}")
+async def thumbnail(job_id: str, slide_no: int, image_id: str):
+    """The actual picture bytes, so the review queue can show what it is asking about.
+
+    A reviewer cannot judge a description without seeing the image. Served from
+    the job's own deck, downscaled, and never cached beyond the job's lifetime.
+    """
+    job = registry.get_job(job_id)
+    if job is None:
+        return _error(404, f"Unknown job: {job_id}")
+
+    source = job.get("output_path") or ""
+    if not source or not Path(source).is_file():
+        return _error(404, "No deck available for this job yet.")
+
+    try:
+        image = _find_image(Presentation(source), slide_no, image_id)
+    except Exception:  # noqa: BLE001
+        return _error(404, "Could not read the deck.")
+    if image is None:
+        return _error(404, f"No image {image_id} on slide {slide_no}.")
+
+    from slidesight.describe import prepare_image
+
+    prepared = prepare_image(image.blob, image.content_type, max_edge=480)
+    if prepared is None:
+        return _error(415, "This image format cannot be displayed.")
+    blob, content_type = prepared
+    return Response(content=blob, media_type=content_type,
+                    headers={"Cache-Control": "private, max-age=3600"})
+
+
+@app.post("/api/jobs/{job_id}/approve")
+async def approve(job_id: str, payload: dict = Body(...)):
+    """Write a human-approved description into the remediated deck.
+
+    This is the point of the review queue: the pipeline deliberately did NOT
+    write these, so approving is what puts them in the file. Editing the draft
+    first is the normal path -- the text sent here is what gets written, not the
+    model's original.
+    """
+    job = registry.get_job(job_id)
+    if job is None:
+        return _error(404, f"Unknown job: {job_id}")
+    if job["status"] != "complete":
+        return _error(409, f"Job {job_id} is {job['status']}; nothing to write yet.")
+
+    try:
+        slide_no = int(payload.get("slide"))
+        image_id = str(payload.get("image_id"))
+    except (TypeError, ValueError):
+        return _error(400, "slide and image_id are required.")
+    alt_text = str(payload.get("alt_text") or "").strip()
+    if not alt_text:
+        return _error(400, "alt_text cannot be empty. Use skip to leave it unwritten.")
+
+    output_path = Path(job["output_path"])
+    if not output_path.is_file():
+        return _error(404, "The remediated file is missing.")
+
+    try:
+        prs = Presentation(str(output_path))
+        image = _find_image(prs, slide_no, image_id)
+        if image is None:
+            return _error(404, f"No image {image_id} on slide {slide_no}.")
+        set_alt_text(image.shape, alt_text)
+        prs.save(str(output_path))
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("approve failed for job %s", job_id)
+        return _error(500, f"Could not write the description ({type(exc).__name__}).")
+
+    # Keep the stored report in step with the file the user will download.
+    report = job.get("report") or {}
+    for record in report.get("images", []):
+        if record["slide"] == slide_no and record["image_id"] == image_id:
+            record["alt_text"] = alt_text
+            record["action"] = "human_approved"
+            break
+    registry.update_job(job_id, report=report)
+
+    logger.info("job %s: approved %s on slide %s", job_id, image_id, slide_no)
+    return {"status": "written", "slide": slide_no, "image_id": image_id}
+
+
+# The web UI is served from this same app, so one command runs everything.
+WEB_ROOT = Path(__file__).resolve().parent.parent / "web"
+if WEB_ROOT.is_dir():
+    app.mount("/", StaticFiles(directory=str(WEB_ROOT), html=True), name="web")
 
 
 if __name__ == "__main__":

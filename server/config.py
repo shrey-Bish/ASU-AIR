@@ -36,10 +36,12 @@ UPLOAD_ROOT = Path(
 # Jobs older than this are eligible for file cleanup on the next upload.
 MAX_JOB_AGE_SECONDS = 2 * 60 * 60  # 2 hours
 
-# CORS: the Streamlit frontend only.
+# The web UI is served by this same app (see the StaticFiles mount in main.py),
+# so browser calls are same-origin and need no CORS grant. These entries only
+# cover running the front end from a separate dev server.
 ALLOWED_ORIGINS = [
-    "http://localhost:8501",
-    "http://127.0.0.1:8501",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
 ]
 
 

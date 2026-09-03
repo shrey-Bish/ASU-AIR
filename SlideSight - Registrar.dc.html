@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; }
+  body { background: #F7F5F0; }
+  * { box-sizing: border-box; }
+  :focus-visible { outline: 3px solid #8C1D40; outline-offset: 2px; border-radius: 2px; }
+  a { color: #8C1D40; }
+  a:hover { color: #6E1732; }
+  textarea, input, button { font: inherit; }
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #F7F5F0; color: #1C1A17; font-family: 'Public Sans', system-ui, sans-serif; font-size: 17px; line-height: 1.55;">
+
+  <a href="#main" style="position: absolute; left: -9999px; top: 0; background: #8C1D40; color: #fff; padding: 10px 16px; z-index: 20;" style-focus="left: 12px; top: 12px;">Skip to main content</a>
+
+  <header style="border-bottom: 1px solid #D9D4C8; background: #FFFFFF;">
+    <div style="max-width: 980px; margin: 0 auto; padding: 18px 24px 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 14px;">
+      <h1 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 26px; font-weight: 700; letter-spacing: -0.01em;">SlideSight</h1>
+      <p style="margin: 0; color: #5A544B; font-size: 15px;">Lecture deck image descriptions &middot; Accessibility review</p>
+      <p style="margin: 0 0 0 auto; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #5A544B;">ASU &middot; Fulton Schools</p>
+    </div>
+    <nav aria-label="Progress through SlideSight" style="max-width: 980px; margin: 0 auto; padding: 14px 24px 0;">
+      <ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px;">
+        <sc-for list="{{ navItems }}" as="step" hint-placeholder-count="4">
+          <li style="margin: 0;">
+            <button type="button" onClick="{{ step.go }}" aria-current="{{ step.current }}" style="{{ step.style }}">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; opacity: 0.75;">{{ step.num }}</span>
+              <span>{{ step.label }}</span>
+            </button>
+          </li>
+        </sc-for>
+      </ol>
+    </nav>
+  </header>
+
+  <main id="main" style="max-width: 980px; margin: 0 auto; padding: 40px 24px 96px;">
+
+    <sc-if value="{{ isUpload }}" hint-placeholder-val="{{ true }}">
+      <section aria-labelledby="upload-h" style="max-width: 680px;">
+        <p style="margin: 0 0 8px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #5A544B;">Step one</p>
+        <h2 id="upload-h" style="margin: 0 0 12px; font-family: 'Source Serif 4', Georgia, serif; font-size: 34px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.2;">Upload a lecture deck</h2>
+        <p style="margin: 0 0 28px; color: #3A362F; max-width: 56ch; text-wrap: pretty;">SlideSight reads every image in your PowerPoint file, writes a description for it, and saves those descriptions back into the file so a screen reader can read them aloud.</p>
+
+        <div style="border-top: 4px solid #FFC627; background: #FFFFFF; border-right: 1px solid #D9D4C8; border-bottom: 1px solid #D9D4C8; border-left: 1px solid #D9D4C8; padding: 36px 28px;">
+          <label for="deck-file" style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.09em; text-transform: uppercase; color: #5A544B; margin-bottom: 10px;">PowerPoint file (.pptx)</label>
+          <div style="border: 2px dashed #B9B2A3; padding: 32px 24px; text-align: center; background: #FBFAF7;">
+            <p style="margin: 0 0 6px; font-size: 19px; font-weight: 600;">Drop your .pptx file here</p>
+            <p style="margin: 0 0 20px; color: #5A544B; font-size: 16px;">or choose it from your computer &middot; up to 200 MB</p>
+            <input id="deck-file" type="file" accept=".pptx" aria-describedby="deck-hint" style="display: block; margin: 0 auto; max-width: 100%; font-size: 16px;">
+            <p id="deck-hint" style="margin: 14px 0 0; font-size: 15px; color: #5A544B;">One deck at a time. Nothing else in the file is changed.</p>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 26px;">
+            <button type="button" onClick="{{ startRun }}" style="background: #8C1D40; color: #FFFFFF; border: 1px solid #8C1D40; border-radius: 4px; padding: 14px 26px; font-size: 17px; font-weight: 600; cursor: pointer;" style-hover="background: #6E1732; border-color: #6E1732;">Describe the images</button>
+            <p style="margin: 0; font-size: 15px; color: #5A544B;">Takes about two minutes for a 50-slide deck.</p>
+          </div>
+        </div>
+
+        <p style="margin: 20px 0 0; font-size: 15px; color: #3A362F; display: flex; gap: 8px; align-items: flex-start;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A544B" stroke-width="2" aria-hidden="true" style="flex: none; margin-top: 2px;"><path d="M12 3 4 6v6c0 5 3.4 8.3 8 9 4.6-.7 8-4 8-9V6z"></path></svg>
+          <span>Runs on ASU hardware &mdash; files never leave campus.</span>
+        </p>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{ isProcessing }}" hint-placeholder-val="{{ true }}">
+      <section aria-labelledby="proc-h" style="max-width: 760px;">
+        <p style="margin: 0 0 8px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #5A544B;">Step two</p>
+        <h2 id="proc-h" style="margin: 0 0 24px; font-family: 'Source Serif 4', Georgia, serif; font-size: 34px; font-weight: 600; letter-spacing: -0.015em;">Describing images</h2>
+
+        <div style="background: #FFFFFF; border: 1px solid #D9D4C8; padding: 26px 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 12px;">
+            <p style="margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: 18px; font-weight: 500;">Slide {{ slideNum }} of {{ slideTotal }}</p>
+            <p style="margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: 18px; color: #5A544B;">{{ pctText }}</p>
+          </div>
+          <div role="progressbar" aria-valuemin="0" aria-valuemax="47" aria-valuenow="{{ slideNum }}" aria-label="Slides described" style="height: 14px; background: #EDEAE2; border: 1px solid #D9D4C8;">
+            <div style="height: 100%; background: #8C1D40; width: {{ barWidth }};"></div>
+          </div>
+          <p aria-live="polite" style="margin: 14px 0 0; font-size: 16px; color: #3A362F;">{{ liveStatus }}</p>
+        </div>
+
+        <h3 style="margin: 34px 0 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 21px; font-weight: 600;">Descriptions as they are written</h3>
+        <ul style="list-style: none; margin: 12px 0 0; padding: 0; border-top: 1px solid #D9D4C8;">
+          <sc-for list="{{ feed }}" as="row" hint-placeholder-count="4">
+            <li style="border-bottom: 1px solid #D9D4C8; padding: 14px 2px; display: grid; grid-template-columns: 92px 1fr; gap: 16px; align-items: start;">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #5A544B;">Slide {{ row.slide }}</span>
+              <span style="font-size: 16px; color: #1C1A17; text-wrap: pretty;">{{ row.text }}</span>
+            </li>
+          </sc-for>
+        </ul>
+        <p style="margin: 18px 0 0; font-size: 15px; color: #5A544B;">You can leave this page open. Descriptions the model is unsure about are collected for your review in the next step.</p>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{ isReview }}" hint-placeholder-val="{{ true }}">
+      <section aria-labelledby="rev-h">
+        <p style="margin: 0 0 8px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #5A544B;">Step three</p>
+        <h2 id="rev-h" style="margin: 0 0 10px; font-family: 'Source Serif 4', Georgia, serif; font-size: 34px; font-weight: 600; letter-spacing: -0.015em;">Review queue</h2>
+        <p style="margin: 0 0 22px; color: #3A362F; max-width: 62ch; text-wrap: pretty;">These {{ totalCount }} images scored below the confidence threshold, so nothing was written for them yet. Read the draft, fix it if it is wrong, and approve it.</p>
+
+        <div style="position: sticky; top: 0; z-index: 5; background: #F7F5F0; border-bottom: 1px solid #D9D4C8; padding: 10px 0 12px; display: flex; flex-wrap: wrap; gap: 18px; align-items: baseline;">
+          <p aria-live="polite" style="margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: 15px;">{{ doneCount }} of {{ totalCount }} handled &middot; {{ pendingCount }} left</p>
+          <p style="margin: 0; font-size: 15px; color: #5A544B;">Approving writes the description into the file.</p>
+        </div>
+
+        <ol style="list-style: none; margin: 0; padding: 0;">
+          <sc-for list="{{ reviewItems }}" as="item" hint-placeholder-count="3">
+            <li style="border-bottom: 1px solid #D9D4C8; padding: 26px 0;">
+              <div style="display: grid; grid-template-columns: 148px 1fr; gap: 24px; align-items: start;">
+
+                <div>
+                  <div role="img" aria-label="{{ item.thumbAlt }}" style="width: 148px; height: 104px; background: #E7E3D9; border: 1px solid #C9C2B2; display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px;">
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #5A544B; line-height: 1.3;">{{ item.thumbLabel }}</span>
+                  </div>
+                  <p style="margin: 8px 0 0; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #5A544B;">Slide {{ item.slide }} &middot; img {{ item.imgIndex }}</p>
+                </div>
+
+                <div>
+                  <h3 style="margin: 0 0 4px; font-family: 'Source Serif 4', Georgia, serif; font-size: 21px; font-weight: 600; line-height: 1.25;">{{ item.title }}</h3>
+                  <p style="margin: 0 0 16px; font-size: 15px; color: #5A544B;">{{ item.context }}</p>
+
+                  <label for="{{ item.fieldId }}" style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.09em; text-transform: uppercase; color: #5A544B; margin-bottom: 6px;">Draft description</label>
+                  <textarea id="{{ item.fieldId }}" rows="3" value="{{ item.draft }}" onChange="{{ item.onEdit }}" aria-describedby="{{ item.reasonId }}" style="width: 100%; background: #FFFFFF; border: 1px solid #A9A294; border-radius: 3px; padding: 12px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 15px; line-height: 1.5; color: #1C1A17; resize: vertical;"></textarea>
+                  <p style="margin: 6px 0 0; font-size: 14px; color: #5A544B;">{{ item.charCount }}</p>
+
+                  <dl style="margin: 16px 0 0; display: grid; grid-template-columns: max-content 1fr; gap: 8px 18px; align-items: start;">
+                    <dt style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.09em; text-transform: uppercase; color: #5A544B; padding-top: 3px;">Confidence</dt>
+                    <dd style="margin: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A5A00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>
+                      <strong style="color: #8A5A00; font-weight: 600;">Low confidence</strong>
+                      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 15px;">{{ item.score }}</span>
+                      <span aria-hidden="true" style="display: inline-block; width: 120px; height: 8px; background: #EDEAE2; border: 1px solid #C9C2B2;">
+                        <span style="display: block; height: 100%; background: #8A5A00; width: {{ item.barWidth }};"></span>
+                      </span>
+                    </dd>
+                    <dt id="{{ item.reasonId }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.09em; text-transform: uppercase; color: #5A544B; padding-top: 3px;">Why flagged</dt>
+                    <dd style="margin: 0; color: #3A362F; font-size: 16px; text-wrap: pretty;">{{ item.reason }}</dd>
+                  </dl>
+
+                  <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; padding-top: 18px; border-top: 1px solid #E4E0D6; align-items: center;">
+                    <button type="button" onClick="{{ item.onApprove }}" style="background: #8C1D40; color: #FFFFFF; border: 1px solid #8C1D40; border-radius: 4px; padding: 11px 22px; font-size: 16px; font-weight: 600; cursor: pointer;" style-hover="background: #6E1732; border-color: #6E1732;">Approve description</button>
+                    <button type="button" onClick="{{ item.onFocus }}" style="background: #FFFFFF; color: #1C1A17; border: 1px solid #A9A294; border-radius: 4px; padding: 11px 20px; font-size: 16px; font-weight: 500; cursor: pointer;" style-hover="background: #F1EEE7;">Edit</button>
+                    <button type="button" onClick="{{ item.onSkip }}" style="background: transparent; color: #3A362F; border: 1px solid transparent; border-radius: 4px; padding: 11px 16px; font-size: 16px; font-weight: 500; cursor: pointer; text-decoration: underline;" style-hover="background: #EDEAE2;">Skip for now</button>
+                    <p aria-live="polite" style="margin: 0 0 0 4px; font-size: 15px; color: {{ item.stateColor }}; display: flex; align-items: center; gap: 6px;">{{ item.stateIcon }}<span>{{ item.stateLabel }}</span></p>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </sc-for>
+        </ol>
+
+        <div style="margin-top: 30px;">
+          <button type="button" onClick="{{ goResults }}" style="background: #FFFFFF; color: #1C1A17; border: 1px solid #A9A294; border-radius: 4px; padding: 13px 24px; font-size: 17px; font-weight: 600; cursor: pointer;" style-hover="background: #F1EEE7;">Finish review and see results</button>
+        </div>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{ isResults }}" hint-placeholder-val="{{ true }}">
+      <section aria-labelledby="res-h">
+        <p style="margin: 0 0 8px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #5A544B;">Step four</p>
+        <h2 id="res-h" style="margin: 0 0 10px; font-family: 'Source Serif 4', Georgia, serif; font-size: 34px; font-weight: 600; letter-spacing: -0.015em;">Results for BIO 340 &mdash; Lecture 09.pptx</h2>
+        <p style="margin: 0 0 28px; color: #3A362F; max-width: 62ch;">47 slides read. Descriptions are saved inside the file, so they travel with it.</p>
+
+        <table style="width: 100%; border-collapse: collapse; background: #FFFFFF; border: 1px solid #D9D4C8;">
+          <caption style="text-align: left; font-family: 'Source Serif 4', Georgia, serif; font-size: 21px; font-weight: 600; padding: 0 0 10px;">What happened to the images</caption>
+          <tbody>
+            <sc-for list="{{ counts }}" as="row" hint-placeholder-count="4">
+              <tr style="border-bottom: 1px solid #E4E0D6;">
+                <th scope="row" style="text-align: left; font-weight: 600; font-size: 17px; padding: 16px 18px; width: 40%;">{{ row.label }}</th>
+                <td style="font-family: 'IBM Plex Mono', monospace; font-size: 26px; font-weight: 500; padding: 16px 18px; width: 90px;">{{ row.value }}</td>
+                <td style="padding: 16px 18px; color: #3A362F; font-size: 16px;">{{ row.note }}</td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+
+        <h3 style="margin: 40px 0 6px; font-family: 'Source Serif 4', Georgia, serif; font-size: 24px; font-weight: 600;">What a blind student hears</h3>
+        <p style="margin: 0 0 16px; color: #3A362F; max-width: 60ch;">Read aloud by a screen reader, before and after SlideSight.</p>
+        <div style="display: grid; gap: 16px;">
+          <sc-for list="{{ compare }}" as="c" hint-placeholder-count="3">
+            <div style="background: #FFFFFF; border: 1px solid #D9D4C8; border-left: 4px solid #C9C2B2; padding: 18px 20px;">
+              <p style="margin: 0 0 12px; font-weight: 600; font-size: 17px;">{{ c.caseName }}</p>
+              <dl style="margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 10px 16px;">
+                <dt style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.09em; text-transform: uppercase; color: #5A544B; padding-top: 3px;">Before</dt>
+                <dd style="margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: 15px; color: #3A362F;">{{ c.before }}</dd>
+                <dt style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.09em; text-transform: uppercase; color: #5A544B; padding-top: 3px;">After</dt>
+                <dd style="margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: 15px; color: #1C1A17;">{{ c.after }}</dd>
+              </dl>
+            </div>
+          </sc-for>
+        </div>
+
+        <h3 style="margin: 40px 0 6px; font-family: 'Source Serif 4', Georgia, serif; font-size: 24px; font-weight: 600;">Other accessibility issues found</h3>
+        <p style="margin: 0 0 16px; color: #3A362F; max-width: 62ch;">SlideSight reports these but does not change them &mdash; each one needs a decision only you can make.</p>
+        <ul style="list-style: none; margin: 0; padding: 0; border-top: 1px solid #D9D4C8;">
+          <sc-for list="{{ issues }}" as="iss" hint-placeholder-count="5">
+            <li style="border-bottom: 1px solid #D9D4C8; padding: 16px 2px; display: grid; grid-template-columns: 1fr 210px; gap: 16px; align-items: start;">
+              <div>
+                <p style="margin: 0 0 3px; display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 17px;">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8A5A00" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex: none;"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5"></path><path d="M12 16h.01"></path></svg>
+                  <span>{{ iss.name }}</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 500; color: #5A544B;">{{ iss.count }}</span>
+                </p>
+                <p style="margin: 0; color: #3A362F; font-size: 16px; text-wrap: pretty;">{{ iss.detail }}</p>
+              </div>
+              <p style="margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #3A362F;">{{ iss.slides }}</p>
+            </li>
+          </sc-for>
+        </ul>
+
+        <div style="margin-top: 36px; padding-top: 24px; border-top: 4px solid #FFC627; display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+          <button type="button" style="background: #8C1D40; color: #FFFFFF; border: 1px solid #8C1D40; border-radius: 4px; padding: 14px 26px; font-size: 17px; font-weight: 600; cursor: pointer;" style-hover="background: #6E1732; border-color: #6E1732;">Download the described deck (.pptx)</button>
+          <button type="button" style="background: #FFFFFF; color: #1C1A17; border: 1px solid #A9A294; border-radius: 4px; padding: 14px 22px; font-size: 17px; font-weight: 500; cursor: pointer;" style-hover="background: #F1EEE7;">Download the accessibility report (PDF)</button>
+          <button type="button" onClick="{{ goUpload }}" style="background: transparent; color: #3A362F; border: 1px solid transparent; border-radius: 4px; padding: 14px 12px; font-size: 17px; font-weight: 500; cursor: pointer; text-decoration: underline;" style-hover="background: #EDEAE2;">Start another deck</button>
+        </div>
+      </section>
+    </sc-if>
+
+  </main>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+const SCREENS = [
+  { key: "upload", label: "Upload" },
+  { key: "processing", label: "Processing" },
+  { key: "review", label: "Review queue" },
+  { key: "results", label: "Results" },
+];
+
+const FEED_LINES = [
+  { slide: 12, text: "Line graph of enzyme reaction rate against temperature, peaking near 40 degrees Celsius then falling sharply." },
+  { slide: 11, text: "Photograph of a student pipetting a clear liquid into a row of test tubes." },
+  { slide: 10, text: "Decorative — university logo. Marked empty so screen readers skip it." },
+  { slide: 9, text: "Diagram of a cell membrane showing the phospholipid bilayer with embedded protein channels." },
+  { slide: 8, text: "Bar chart comparing growth in four bacterial cultures over six hours." },
+  { slide: 7, text: "Scanned handwritten equation for Michaelis-Menten kinetics." },
+];
+
+const ITEMS = [
+  {
+    id: "a", slide: 14, imgIndex: 2,
+    title: "Mitochondrial electron transport chain",
+    context: "Section 3 — Cellular respiration",
+    thumbLabel: "thumbnail\nslide 14 · img 2",
+    thumbAlt: "Thumbnail of the image on slide 14, a multi-part scientific diagram.",
+    draft: "Diagram of the electron transport chain across the inner mitochondrial membrane, with four protein complexes and ATP synthase.",
+    score: 0.52,
+    reason: "The diagram has small handwritten annotations the model could not read. Labels on complexes III and IV may be wrong.",
+  },
+  {
+    id: "b", slide: 19, imgIndex: 1,
+    title: "Field site photograph, Sonoran Desert",
+    context: "Section 4 — Case study",
+    thumbLabel: "thumbnail\nslide 19 · img 1",
+    thumbAlt: "Thumbnail of the image on slide 19, a wide outdoor photograph.",
+    draft: "A wide desert landscape with saguaro cacti and low scrub under a clear sky. Two people in the middle distance appear to be taking measurements.",
+    score: 0.44,
+    reason: "The model cannot tell what the two people are doing, and the equipment is too small to identify.",
+  },
+  {
+    id: "c", slide: 27, imgIndex: 3,
+    title: "Scatter plot: body mass and metabolic rate",
+    context: "Section 5 — Scaling laws",
+    thumbLabel: "thumbnail\nslide 27 · img 3",
+    thumbAlt: "Thumbnail of the image on slide 27, a scatter plot with a fitted line.",
+    draft: "Log-log scatter plot of metabolic rate against body mass for 40 mammal species, with a fitted line of slope approximately 0.75.",
+    score: 0.58,
+    reason: "Axis units are rendered at low resolution. The slope value is inferred from the line, not read from the caption.",
+  },
+  {
+    id: "d", slide: 33, imgIndex: 1,
+    title: "Timeline of the 1918 influenza pandemic",
+    context: "Section 6 — Historical context",
+    thumbLabel: "thumbnail\nslide 33 · img 1",
+    thumbAlt: "Thumbnail of the image on slide 33, a horizontal timeline graphic.",
+    draft: "Horizontal timeline marking four waves of the 1918 influenza pandemic between March 1918 and April 1919.",
+    score: 0.61,
+    reason: "Three of the date labels overlap in the source image, so the model is unsure whether the second wave is marked September or October 1918.",
+  },
+];
+
+const COUNTS = [
+  { label: "Images found", value: 128, note: "Across 47 slides, including repeats in the template." },
+  { label: "Described automatically", value: 96, note: "Confidence at or above 0.75. Already written into the file." },
+  { label: "Sent to review", value: 4, note: "Below the threshold. You handled these in step three." },
+  { label: "Marked decorative and silenced", value: 28, note: "Logos, dividers and bullet icons. Given empty alt text so screen readers skip them." },
+];
+
+const COMPARE = [
+  {
+    caseName: "A described photograph (slide 19)",
+    before: "\"Image. Image. graphic 4 4 1 . j p g\"",
+    after: "\"A wide desert landscape with saguaro cacti and low scrub under a clear sky. Two people in the middle distance are taking measurements.\"",
+  },
+  {
+    caseName: "A chart described automatically (slide 27)",
+    before: "\"Image. chart 7.\"",
+    after: "\"Log-log scatter plot of metabolic rate against body mass for 40 mammal species, with a fitted line of slope about 0.75.\"",
+  },
+  {
+    caseName: "A decorative logo (every slide footer)",
+    before: "\"Image. a s u dash logo dash rgb dash small . p n g\" — repeated on all 47 slides.",
+    after: "Nothing. The image is skipped entirely and the student hears the slide content instead.",
+  },
+];
+
+const ISSUES = [
+  { name: "Low colour contrast in text", count: "9 instances", detail: "Body text below 4.5:1 against its background, mostly light grey on white.", slides: "3, 8, 12, 15, 22, 30, 31, 44, 46" },
+  { name: "Reading order does not match layout", count: "6 slides", detail: "A screen reader will read the caption before the heading it belongs to.", slides: "5, 12, 19, 27, 33, 41" },
+  { name: "Missing slide titles", count: "4 slides", detail: "No title placeholder, so these slides cannot be navigated to by title.", slides: "7, 18, 29, 40" },
+  { name: "Tables without header rows", count: "3 tables", detail: "Cells are not associated with headers, so values are read without context.", slides: "16, 24, 38" },
+  { name: "Link text that says nothing", count: "5 links", detail: "Links read as \"click here\" or the bare URL.", slides: "9, 21, 25, 35, 45" },
+];
+
+class Component extends DCLogic {
+  state = {
+    screen: "upload",
+    slideNum: 0,
+    drafts: Object.fromEntries(ITEMS.map((i) => [i.id, i.draft])),
+    statuses: Object.fromEntries(ITEMS.map((i) => [i.id, "pending"])),
+  };
+
+  componentWillUnmount() { clearInterval(this._t); }
+
+  go = (screen) => () => {
+    clearInterval(this._t);
+    this.setState({ screen });
+    if (screen === "processing") this.runProgress();
+    window.scrollTo(0, 0);
+  };
+
+  runProgress() {
+    this.setState({ slideNum: 0 });
+    this._t = setInterval(() => {
+      this.setState((s) => {
+        if (s.slideNum >= 47) { clearInterval(this._t); return null; }
+        return { slideNum: s.slideNum + 1 };
+      });
+    }, 260);
+  }
+
+  renderVals() {
+    const { screen, slideNum, drafts, statuses } = this.state;
+    const total = 47;
+    const pct = Math.round((slideNum / total) * 100);
+    const shown = Math.max(1, Math.min(6, Math.ceil(slideNum / 2)));
+    const done = ITEMS.filter((i) => statuses[i.id] !== "pending").length;
+
+    const stateMeta = {
+      pending: { label: "Not handled yet", color: "#5A544B" },
+      approved: { label: "Approved and written into the file", color: "#1E6B45" },
+      skipped: { label: "Skipped — no description written", color: "#8A5A00" },
+    };
+    const icon = (kind) => {
+      if (kind === "approved") return React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "#1E6B45", strokeWidth: 2.5, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, React.createElement("path", { d: "m4 12 5 5L20 6" }));
+      if (kind === "skipped") return React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "#8A5A00", strokeWidth: 2, strokeLinecap: "round", "aria-hidden": "true" }, React.createElement("circle", { cx: 12, cy: 12, r: 9 }), React.createElement("path", { d: "M8 12h8" }));
+      return React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "#5A544B", strokeWidth: 2, strokeLinecap: "round", "aria-hidden": "true" }, React.createElement("circle", { cx: 12, cy: 12, r: 9 }), React.createElement("path", { d: "M12 7v5l3 2" }));
+    };
+
+    return {
+      isUpload: screen === "upload",
+      isProcessing: screen === "processing",
+      isReview: screen === "review",
+      isResults: screen === "results",
+      startRun: this.go("processing"),
+      goResults: this.go("results"),
+      goUpload: this.go("upload"),
+
+      navItems: SCREENS.map((s, i) => {
+        const active = s.key === screen;
+        return {
+          num: String(i + 1).padStart(2, "0"),
+          label: s.label,
+          go: this.go(s.key),
+          current: active ? "step" : "false",
+          style: [
+            "display:flex", "gap:8px", "align-items:baseline", "cursor:pointer",
+            "font-family:'Public Sans',sans-serif", "font-size:16px",
+            "font-weight:" + (active ? "600" : "500"),
+            "padding:10px 16px", "border:0", "border-radius:0",
+            "background:" + (active ? "#F7F5F0" : "transparent"),
+            "color:" + (active ? "#8C1D40" : "#3A362F"),
+            "border-bottom:3px solid " + (active ? "#8C1D40" : "transparent"),
+          ].join(";"),
+        };
+      }),
+
+      slideNum, slideTotal: total,
+      pctText: pct + "%",
+      barWidth: pct + "%",
+      liveStatus: slideNum >= total
+        ? "All 47 slides read. 4 images need your review."
+        : "Reading slide " + Math.max(1, slideNum) + ". Descriptions the model is confident about are being written straight into the file.",
+      feed: FEED_LINES.slice(0, shown),
+
+      totalCount: ITEMS.length,
+      doneCount: done,
+      pendingCount: ITEMS.length - done,
+      reviewItems: ITEMS.map((it) => {
+        const status = statuses[it.id];
+        const text = drafts[it.id];
+        return {
+          ...it,
+          fieldId: "draft-" + it.id,
+          reasonId: "reason-" + it.id,
+          draft: text,
+          charCount: text.length + " characters. Aim for one or two clear sentences.",
+          score: it.score.toFixed(2),
+          barWidth: Math.round(it.score * 100) + "%",
+          stateLabel: stateMeta[status].label,
+          stateColor: stateMeta[status].color,
+          stateIcon: icon(status),
+          onEdit: (e) => { const v = e.target.value; this.setState((s) => ({ drafts: { ...s.drafts, [it.id]: v } })); },
+          onFocus: () => { const el = document.getElementById("draft-" + it.id); if (el) el.focus(); },
+          onApprove: () => this.setState((s) => ({ statuses: { ...s.statuses, [it.id]: "approved" } })),
+          onSkip: () => this.setState((s) => ({ statuses: { ...s.statuses, [it.id]: "skipped" } })),
+        };
+      }),
+
+      counts: COUNTS,
+      compare: COMPARE,
+      issues: ISSUES,
+    };
+  }
+}
+
+</script>
+</body>
+</html>
