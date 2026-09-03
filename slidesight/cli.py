@@ -68,12 +68,28 @@ def main(argv: list[str] | None = None) -> int:
     if not source.is_file():
         print(f"error: no such file: {source}", file=sys.stderr)
         return 1
-    if source.suffix.lower() != ".pptx":
+    suffix = source.suffix.lower()
+    if suffix == ".pdf":
         print(
-            f"error: {source.suffix or 'this file'} is not supported -- PowerPoint "
-            ".pptx only.\n"
-            "       Legacy .ppt is a different (binary) format; convert it first:\n"
+            "error: PDF is not supported. SlideSight remediates PowerPoint only.\n"
+            "       PDF accessibility needs tag trees and reading order, which is a\n"
+            "       different and much larger problem. ASU's Cloud Innovation Center\n"
+            "       already ships a PDF tool: github.com/ASUCICREPO/PDF_Accessibility",
+            file=sys.stderr,
+        )
+        return 1
+    if suffix in (".ppt", ".pps", ".odp", ".key"):
+        print(
+            f"error: {suffix} is a different file format -- SlideSight reads .pptx.\n"
+            "       Convert it first, then run again:\n"
             f"       soffice --headless --convert-to pptx {source.name!r}",
+            file=sys.stderr,
+        )
+        return 1
+    if suffix != ".pptx":
+        print(
+            f"error: {suffix or 'this file'} is not a PowerPoint file. "
+            "SlideSight reads .pptx only.",
             file=sys.stderr,
         )
         return 1
@@ -116,7 +132,7 @@ def main(argv: list[str] | None = None) -> int:
                 on_progress=on_progress,
             )
         )
-    except RuntimeError as exc:
+    except (RuntimeError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
 

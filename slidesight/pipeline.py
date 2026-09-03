@@ -22,6 +22,36 @@ from .extract import count_tables, deck_text, extract_images
 ProgressFn = Callable[[dict[str, Any]], None]
 
 
+def _open_presentation(path: Path) -> Presentation:
+    """Open a .pptx, or raise a message a user can act on.
+
+    A file with a .pptx extension that is really a PDF or a legacy .ppt raises
+    PackageNotFoundError from deep inside python-pptx. The UI uploads whatever
+    a professor drags in, so that needs to surface as plain English.
+    """
+    try:
+        return Presentation(str(path))
+    except Exception as exc:
+        head = b""
+        try:
+            head = path.open("rb").read(4)
+        except OSError:
+            pass
+        if head.startswith(b"%PDF"):
+            raise ValueError(
+                f"{path.name} is a PDF with a .pptx name. SlideSight reads "
+                "PowerPoint files only."
+            ) from exc
+        if head.startswith(b"\xd0\xcf\x11\xe0"):
+            raise ValueError(
+                f"{path.name} is a legacy .ppt saved with a .pptx name. Convert "
+                "it first: soffice --headless --convert-to pptx"
+            ) from exc
+        raise ValueError(
+            f"{path.name} is not a readable .pptx file ({type(exc).__name__})."
+        ) from exc
+
+
 def make_client() -> AsyncOpenAI:
     """An OpenAI-compatible client pointed at the ASU AIR gateway."""
     return AsyncOpenAI(api_key=config.get_api_key(), base_url=config.get_base_url())
@@ -70,7 +100,7 @@ async def remediate(
     input_path = Path(input_path)
     started = time.time()
 
-    prs = Presentation(str(input_path))
+    prs = _open_presentation(input_path)
     images = extract_images(prs)
     tables = count_tables(prs)
 
@@ -122,7 +152,7 @@ def audit_only(input_path: str | Path) -> dict[str, Any]:
     unreachable, this alone is still a working accessibility tool.
     """
     input_path = Path(input_path)
-    prs = Presentation(str(input_path))
+    prs = _open_presentation(input_path)
     return {
         "source": input_path.name,
         "slides": len(prs.slides),

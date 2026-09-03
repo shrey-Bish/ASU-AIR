@@ -21,3 +21,8 @@ __pycache__/
 # Test decks (downloaded, not ours to redistribute)
 decks/
 out/
+
+# Demo + working folders
+decks_demo/
+decks_legacy/
+pdfs/

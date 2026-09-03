@@ -74,8 +74,15 @@ file.
 2 - blurry, cropped, partially cut off, or unfamiliar subject matter
 1 - cannot determine what this shows
 
+STEP 4. List what you can literally read in the image.
+
+"visible_text" is the labels, numbers, axis titles and captions you can actually
+make out in the image itself -- not what the slide text says should be there. If
+nothing is legible, return an empty list. This list is checked against your
+description, so do not pad it.
+
 Return ONLY this JSON:
-{{"description": "...", "decorative": false, "confidence": 4, "reason": "one line, only when confidence is 3 or below"}}"""
+{{"description": "...", "decorative": false, "confidence": 4, "visible_text": ["axis label", "42"], "reason": "one line, only when confidence is 3 or below"}}"""
 
 SUMMARY_PROMPT = """Summarize what this lecture deck covers in under 200 words:
 subject, level, and the main topics in order. This summary gives an image
@@ -158,7 +165,45 @@ def parse_response(text: str) -> dict[str, Any]:
                         return json.loads(text[start : i + 1])
                     except json.JSONDecodeError:
                         break
+    # The model can run out of output tokens mid-object, leaving valid content
+    # inside an unterminated JSON string. Losing a good description to a missing
+    # closing brace would mislabel it as low confidence, so salvage the fields.
+    salvaged = _salvage(text)
+    if salvaged:
+        return salvaged
     raise ValueError(f"no JSON object in response: {text[:200]!r}")
+
+
+DESC_RE = re.compile(r'"(?:description|alt_text)"\s*:\s*"((?:[^"\\]|\\.)*)', re.S)
+CONF_RE = re.compile(r'"confidence"\s*:\s*(\d)')
+DECOR_RE = re.compile(r'"decorative"\s*:\s*(true|false)', re.I)
+REASON_RE = re.compile(r'"reason"\s*:\s*"((?:[^"\\]|\\.)*)', re.S)
+
+
+def _salvage(text: str) -> dict[str, Any] | None:
+    """Pull fields out of a truncated JSON object."""
+    match = DESC_RE.search(text)
+    if not match:
+        return None
+    description = match.group(1).encode().decode("unicode_escape", "replace").strip()
+    if not description:
+        return None
+    conf = CONF_RE.search(text)
+    decor = DECOR_RE.search(text)
+    reason = REASON_RE.search(text)
+    out: dict[str, Any] = {
+        "description": description,
+        "decorative": bool(decor and decor.group(1).lower() == "true"),
+        # A truncated reply never showed us its confidence if the field was cut,
+        # so assume it needs a human rather than assuming it was fine.
+        "confidence": int(conf.group(1)) if conf else 3,
+        "truncated": True,
+    }
+    if reason:
+        out["reason"] = reason.group(1).strip()
+    elif not conf:
+        out["reason"] = "model response was cut off before it reported confidence"
+    return out
 
 
 def _as_bool(value: Any) -> bool:
@@ -182,12 +227,85 @@ def normalize(raw: dict[str, Any]) -> dict[str, Any]:
     confidence = _as_confidence(raw.get("confidence"))
     reason = raw.get("reason")
     reason = str(reason).strip() if reason not in (None, "", "null") else None
+    visible = raw.get("visible_text") or []
+    if isinstance(visible, str):
+        visible = [visible]
+    visible = [str(v) for v in visible if str(v).strip()]
     return {
         "description": description,
         "decorative": decorative,
         "confidence": confidence,
         "reason": reason,
+        "visible_text": visible,
     }
+
+
+NUMBER_RE = re.compile(r"-?\d[\d,]*\.?\d*")
+
+# Above this many legible items, trust the model's own confidence instead.
+MAX_VISIBLE_FOR_LEAK_CHECK = 2
+
+
+def _numbers(text: str) -> set[str]:
+    """Numbers in a string, normalised so 1,200 and 1200 compare equal."""
+    out = set()
+    for match in NUMBER_RE.findall(text or ""):
+        cleaned = match.replace(",", "").rstrip(".")
+        if len(cleaned.lstrip("-")) >= 2:  # single digits are too noisy to judge
+            out.add(cleaned)
+    return out
+
+
+def cross_check(result: dict[str, Any], context) -> dict[str, Any]:
+    """Catch values copied out of the slide text instead of read from the image.
+
+    The failure this defends against: given an illegible image, the model
+    reports precise values it cannot possibly see, lifted from the slide text
+    sitting next to it, and still scores itself 4 or 5. Feeding the same image
+    a *different* slide's text made it describe the wrong subject entirely.
+
+    So we ask the model what it can literally read, then check the numbers in
+    its description against that list. A number that is absent from what it
+    claims to see, but present in the slide text, is very likely copied. That
+    caps confidence at 3, which routes the image to a human.
+    """
+    if result.get("decorative") or not result.get("description"):
+        return result
+
+    visible = result.get("visible_text") or []
+
+    # If the model listed a real amount of legible detail, it demonstrably read
+    # the image, and its own confidence and reason are better judges than this
+    # heuristic. Overriding there produced false positives on clean diagrams
+    # whose annotation values simply were not itemised. The check is aimed at
+    # the opposite case: "I can barely read this" plus a description full of
+    # precise values.
+    if len(visible) > MAX_VISIBLE_FOR_LEAK_CHECK:
+        return result
+
+    claimed = _numbers(" ".join(visible))
+    described = _numbers(result["description"])
+    unread = described - claimed
+    if not unread:
+        return result
+
+    slide_text = " ".join(
+        filter(None, (context.title, context.body, context.notes))
+    )
+    copied = sorted(unread & _numbers(slide_text))
+    if not copied:
+        return result
+
+    result["confidence"] = min(result.get("confidence", 5), 3)
+    detail = ", ".join(copied[:4])
+    existing = result.get("reason")
+    note = (
+        f"values {detail} appear in the slide text but not in what the model "
+        "reported reading from the image -- possibly copied rather than read"
+    )
+    result["reason"] = f"{existing} | {note}" if existing else note
+    result["context_leak"] = copied
+    return result
 
 
 async def describe_image(client, image: ImageRef, summary: str = "") -> dict[str, Any]:
@@ -200,7 +318,7 @@ async def describe_image(client, image: ImageRef, summary: str = "") -> dict[str
     )
     response = await client.chat.completions.create(
         model=config.MODEL_VISION,
-        max_tokens=600,
+        max_tokens=1000,
         temperature=0.2,
         messages=[
             {
@@ -212,7 +330,8 @@ async def describe_image(client, image: ImageRef, summary: str = "") -> dict[str
             }
         ],
     )
-    return normalize(parse_response(response.choices[0].message.content))
+    result = normalize(parse_response(response.choices[0].message.content))
+    return cross_check(result, image.context)
 
 
 async def summarize_deck(client, text: str) -> str:
