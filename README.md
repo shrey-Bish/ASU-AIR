@@ -70,6 +70,7 @@ Wrote out/lecture.remediated.json
 | `-r, --report` | where to write the JSON report |
 | `-c, --concurrency` | parallel calls to the gateway (default 4) |
 | `--no-summary` | skip the one-per-deck summary call |
+| `--wcag-only` | run the accessibility checks only, no model calls |
 | `--quiet` | only print the final counts |
 
 **PowerPoint `.pptx` only.** Legacy `.ppt` is a different binary format that
@@ -112,6 +113,7 @@ the UI:
 | `describe.py` | One vision call per image returning description, decorative flag, confidence, and reason. |
 | `apply.py` | The confidence gate, and write-back into the OOXML `descr` attribute. |
 | `pipeline.py` | Async orchestration with a bounded semaphore; results stream as they land. |
+| `wcag.py` | Five detection-only accessibility checks. No model calls. |
 
 Three details that are easy to get wrong, all verified against real decks:
 
@@ -190,6 +192,34 @@ in `python-pptx`, but that is not the same as a screen reader reading it aloud.
 **Department coverage is thin.** 11 decks across 4 subject areas, and 7 of them
 are from one course. PLAN.md calls for 20–30 decks from five or more
 departments; this is short of that.
+
+## Accessibility report
+
+Alongside alt text, SlideSight detects five issues it deliberately does **not**
+fix. Alt text is additive — filling an empty field breaks nothing. Changing a
+professor's colours or type sizes hands back a deck they do not recognise. So
+these are reported with slide numbers for a human to decide:
+
+| Check | What it finds |
+|---|---|
+| `missing_title` | Slides with no title placeholder, or an empty one. Screen readers navigate by title, and a text box that merely *looks* like a title does not count. |
+| `small_text` | Body text under 18pt, resolved against the layout placeholder when the run inherits its size. |
+| `table_no_header` | Tables with no header row, leaving a screen reader no column context. |
+| `vague_link` | "click here", "read more" — screen reader users navigate by link list. |
+| `reading_order` | Shapes are announced in XML order, not visual order. A deck can look right and read out backwards. |
+
+Run them alone, with no API key and no network:
+
+```bash
+.venv/bin/python -m slidesight lecture.pptx --wcag-only
+```
+
+This is also the graceful-degradation path: if the gateway is unreachable, this
+alone is still a working accessibility tool.
+
+**Contrast is not implemented.** PowerPoint colours are usually theme references
+with tint maths, and text over a photograph has no computable ratio. It was
+first on the cut list and it got cut.
 
 ## Limitations
 
