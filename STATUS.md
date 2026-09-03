@@ -1,6 +1,6 @@
 # SlideSight — build status and review
 
-Written 3 Sep 2026, 3:10 PM MST. Code freeze 6 PM, submission 11:59 PM.
+Written 3 Sep 2026, 5:00 PM MST. Code freeze 6 PM, submission 11:59 PM.
 
 This is the honest state of the project: what exists, how it works, what has
 been proven, what has not, and what is still owed. Read the "Not proven" and
@@ -38,22 +38,23 @@ on-premise inference are the parts that are ours.
 | Area | State |
 |---|---|
 | Extraction (incl. images nested in groups) | ✅ Done, verified |
-| Vision descriptions via ASU AIR | ✅ Done, verified on 405 images |
-| Confidence gate + review queue | ✅ Done, 19 items on real decks |
-| Decorative detection + silencing | ✅ Done + guarded (see §5) |
+| Vision descriptions via ASU AIR | ✅ Done, verified on 380 images |
+| Confidence gate + review queue | ✅ Done, 17 items on real decks |
+| Decorative detection + silencing | ✅ Done + guarded, catches 9 of 12 (§5) |
 | Write-back into the file | ✅ Done, verified in 3 readers |
 | Accessibility (WCAG) checks — 5 of 6 | ✅ Done, verified |
+| Screen-reader audio preview (before/after) | ✅ Done, working |
 | Contrast check | ❌ Cut, deliberately (see §7) |
 | Second "critique" pass | ❌ Cut, deliberately (see §7) |
 | Batch evaluation harness | ✅ Done |
 | Streamlit UI | ⬜ Person B, not started here |
-| Screen reader run end to end | ⬜ **Not done — needs a human** |
+| VoiceOver run end to end | ⬜ **Not done — needs a human keypress** |
 | Tested in real PowerPoint | ⬜ **Not done — not installed** |
 | Pitch deck / video / written answers | ⬜ **Not started** |
-| Progress report filed | ⬜ **Unknown — check today** |
-| Team size 3–5 vs our 2 | ⬜ **Unresolved — biggest risk** |
+| Progress report filed | ⬜ **Still open — do this first** |
+| Team size 3–5 vs our 2 | ✅ Confirmed OK |
 
-11 commits, ~1,480 lines of Python. Repo:
+15 commits, ~1627 lines of Python. Repo:
 [github.com/shrey-Bish/ASU-AIR](https://github.com/shrey-Bish/ASU-AIR)
 
 ---
@@ -75,7 +76,8 @@ on-premise inference are the parts that are ours.
 | `slidesight/wcag.py` | 236 | Five detection-only accessibility checks. No model calls. |
 | `slidesight/cli.py` | 162 | Command line, progress output, input validation. |
 | `scripts/evaluate.py` | 122 | Batch-runs a folder of decks, writes the summary the results table comes from. |
-| `scripts/make_review_demo.py` | 124 | Builds a deliberately degraded deck so the gate has something to catch on stage. |
+| `scripts/make_review_demo.py` | 124 | Builds a deliberately degraded deck — kept as calibration evidence. |
+| `scripts/screen_reader_preview.py` | 108 | Speaks what a screen reader announces before and after, via the macOS `say` voice. Can save audio for the video. |
 
 ### Decisions that matter
 
@@ -199,6 +201,23 @@ previously-silenced images, catches every AI 101 case, and moved the review
   preserved byte-identical.** A separate OOXML implementation reading our
   `descr` field is real evidence it is written where a conforming reader looks.
 
+### Hearing it, without VoiceOver
+
+`scripts/screen_reader_preview.py` speaks what a screen reader announces for
+each image, before and after, using the macOS `say` engine. **Verified working.**
+On slide 13 of the ASU machine-learning deck:
+
+> **BEFORE:** "C:\Users\symbiosis\Desktop\IB2COM\box_fls.png"
+> **AFTER:** "Laparoscopic surgery simulator with a monitor displaying a virtual
+> surgical environment showing colorful anatomical structures and tools…"
+
+That before is not invented. PowerPoint auto-filled the alt text with the source
+file path, so a student in that course hears a Windows directory read out.
+
+It is a preview, not proof — it reads the file the same way we wrote it, so it
+does not independently confirm PowerPoint exposes the field. `--save` writes
+audio files for the pitch video.
+
 ### The confidence gate fires on real input
 
 19 review items: 16 from the decorative guard, 3 genuine low confidence:
@@ -289,8 +308,8 @@ plan asks for 20–30 decks from five or more departments.
 
 | Item | Est. | Note |
 |---|---|---|
-| **Progress report filed** | 10 min | Plan says missing it risks disqualification |
-| **Team size 3–5 vs our 2** | — | Plan says message organisers immediately. **Biggest single risk to the submission.** |
+| **Progress report filed** | 10 min | Plan says missing it risks disqualification. **Still open.** |
+| ~~Team size 3–5 vs our 2~~ | — | ✅ Confirmed OK with organisers |
 | Pitch deck (Google Slides/Canva — a GitHub PDF is explicitly disallowed) | ~1.5 hr | |
 | 90-second video on YouTube | ~1 hr | Script ready in DEMO.md |
 | Written submission answers | ~1 hr | |
@@ -303,7 +322,7 @@ plan asks for 20–30 decks from five or more departments.
 |---|---|
 | Streamlit UI — upload, progress, review queue, download | Person B |
 | Screen reader test on before/after | Person B (plan §12) |
-| More decks, more departments | Person B |
+| ~~More decks, more departments~~ | Dropped — 10 decks with a false-positive analysis beats 20 without |
 
 ---
 
