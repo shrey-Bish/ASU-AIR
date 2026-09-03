@@ -2,13 +2,18 @@
 .env
 .env.*
 
+# Python
+.venv/
+__pycache__/
+*.pyc
+
 # macOS
 .DS_Store
 
 # Decks / source documents (large binaries, kept local)
 *.ppt
 *.pptx
-*.pdf
 *.key
 *.doc
 *.docx
+*.pdf

@@ -1,0 +1,150 @@
+{
+  "source": "ASU AIR Spark Kick Off Slides (in progress).pptx",
+  "output": "out/kickoff.remediated.pptx",
+  "slides": 45,
+  "tables_detected": 2,
+  "shapes_written": 15,
+  "deck_summary": "This presentation is a kickoff deck for the **ASU AIR Spark Challenge**, a university-level virtual hackathon for students, faculty, and staff.\n\nThe content covers the following topics in order:\n1. **Introduction:** Welcome addresses and participant lists.\n2. **Challenge Overview:** An invitation to build apps using the ASU AI Research Acceleration Platform to solve real-world problems.\n3. **Logistics:** Event timeline (Sept 2\u20134), submission deadlines, and deliverables (code, README, and a 90-second pitch video).\n4. **Evaluation & Prizes:** Rubrics for screening the top 10 teams and scholarship prizes for the winner and crowd favorite.\n5. **Rules & Technical Setup:** Collaboration requirements, plagiarism policies, and instructions for accessing the AI platform via VPN and Voyager.\n6. **Support Systems:** Introduction of technical mentors, experience design staff, and the Discord community.\n7. **Team Organization:** Current team lineups and instructions for finalizing team names and registration forms.\n8. **Pitch Guidance:** Detailed requirements for the final presentation, including benchmarking GPU vs. CPU performance and time-management tips for the 4-minute pitch.",
+  "runtime_seconds": 82.9,
+  "images_found": 15,
+  "auto_applied": 14,
+  "review_queue": 0,
+  "decorative": 1,
+  "images": [
+    {
+      "slide": 1,
+      "image_id": "shape_8661",
+      "alt_text": "ASU AIR Spark Challenge kickoff slide. Event: Wednesday, September 2, 5\u20137:30 PM. Sponsored by ASU Knowledge Enterprise, powered by Enterprise Technology. Check-in link: https://airtable.com/appzNHpLL8HIkEFLA/pagPFVRL1MKkgAsdj/form. Deck covers challenge overview, logistics, evaluation, rules, support, team organization, and pitch guidance.",
+      "confidence": 5,
+      "decorative": false,
+      "reason": null,
+      "action": "auto_applied"
+    },
+    {
+      "slide": 2,
+      "image_id": "shape_8666",
+      "alt_text": "ASU Enterprise Technology logo. The letters 'ASU' are large and stylized with a sunburst design inside the 'S'. To the right, 'Enterprise Technology' is written in two lines. Below, 'Arizona State University' appears in smaller text. All text is white on a black background.",
+      "confidence": 5,
+      "decorative": false,
+      "reason": null,
+      "action": "auto_applied"
+    },
+    {
+      "slide": 2,
+      "image_id": "shape_8667",
+      "alt_text": "ASU Knowledge Enterprise logo. The ASU letters are stylized with a sunburst design, followed by 'Knowledge Enterprise' in bold text. Below, 'Arizona State University' is written in a clean sans-serif font. This represents the university's research and innovation division.",
+      "confidence": 5,
+      "decorative": false,
+      "reason": null,
+      "action": "auto_applied"
+    },
+    {
+      "slide": 11,
+      "image_id": "shape_8749",
+      "alt_text": "Spark Challenge Submission Form. Deadline: 11:59 p.m. MST, Sept. 3, 2026. Fields: Select challenge (ASU AIR Spark Challenge), Submitter Name, Email, Team Name, Hero image (horizontal, required), Team photo (optional), Solution name (prompt: What do you call your solution/product?).",
+      "confidence": 5,
+      "decorative": false,
+      "reason": null,
+      "action": "auto_applied"
+    },
+    {
+      "slide": 20,
+      "image_id": "shape_8819",
+      "alt_text": "Three smartphone screens showing the ASU Pocket app for digital credentials. Left: Onboarding screen with 'Create Wallet' button. Middle: 'Achievements' screen with 'Get a Sample Credential' and 'Get my ASU Credentials' buttons. Right: List of 5 achievements including 'Learnovator' from Arizona State University and courses from Rio Salado College.",
+      "confidence": 5,
+      "decorative": false,
+      "reason": null,
+      "action": "auto_applied"
+    },
+    {
+      "slide": 25,
+      "image_id": "shape_8866",
+      "alt_text": "Discord logo featuring a blue, stylized game controller with two circular eyes and a smiling mouth, followed by the word 'Discord' in bold blue letters.",
+      "confidence": 5,
+      "decorative": false,
+      "reason": null,
+      "action": "auto_applied"
+    },
+    {
+      "slide": 26,
+      "image_id": "shape_8873",
+      "alt_text": "Discord server interface for ASU AIR Spark Challenge. Customization questions: 'Select your Challenge' with 'ASU AIR Spark Challenge' chosen. 'Select your role' options: 'Hacker' (Challenge participant) and 'Challenge Staff' (Educator, Mentor, etc.). User profile shows Olivia Her neddo with Organizer and ASU AIR roles. Left sidebar lists channels including #get-started, #hackathons, and #tech-support.",
+      "confidence": 5,
+      "decorative": false,
+      "reason": null,
+      "action": "auto_applied"
+    },
+    {
+      "slide": 30,
+      "image_id": "shape_8917",
+      "alt_text": "Spark Challenge Progress Report form. Required fields: Select your challenge (ASU AIR Spark Challenge), Your Name, Project Status (How is the project coming along?), and Team Status (What's the vibe amongst the team?). All individuals must complete reports to avoid disqualification. Organizers review submissions.",
+      "confidence": 4,
+      "decorative": false,
+      "reason": "Form fields and instructions are clear, but exact dropdown options are not visible.",
+      "action": "auto_applied"
+    },
+    {
+      "slide": 31,
+      "image_id": "shape_8924",
+      "alt_text": "Google Drive logo: a stylized triangle composed of four colored segments \u2014 green, yellow, blue, and red \u2014 arranged in a hexagonal shape with rounded corners.",
+      "confidence": 5,
+      "decorative": false,
+      "reason": null,
+      "action": "auto_applied"
+    },
+    {
+      "slide": 35,
+      "image_id": "shape_8955",
+      "alt_text": "Form titled 'Finalize your team' for the ASU AIR Spark Challenge. Fields include: Select your challenge (pre-filled: ASU AIR Spark Challenge), Find your name, ASURITE user ID, Student ID # (10-digit), Discord ID, and Enter your team name. All fields except Discord ID are marked required. Deadline: 11:00 a.m.",
+      "confidence": 5,
+      "decorative": false,
+      "reason": null,
+      "action": "auto_applied"
+    },
+    {
+      "slide": 38,
+      "image_id": "shape_8975",
+      "alt_text": "Form titled 'Finalize your team' for the ASU AIR Spark Challenge. Fields include: Select your challenge (pre-filled: ASU AIR Spark Challenge), Find your name, ASURITE user ID, Student ID # (10-digit), Discord ID, and Enter your team name. All fields are required except Discord ID. Deadline: 11:00 a.m.",
+      "confidence": 5,
+      "decorative": false,
+      "reason": null,
+      "action": "auto_applied"
+    },
+    {
+      "slide": 42,
+      "image_id": "shape_9001",
+      "alt_text": "Form titled 'Finalize your team' for the ASU AIR Spark Challenge. Fields include: Select your challenge (pre-filled: ASU AIR Spark Challenge), Find your name, ASURITE user ID, Student ID # (10-digit), Discord ID, and Enter your team name. All fields except Discord ID are marked required. Deadline: 11:00 a.m.",
+      "confidence": 5,
+      "decorative": false,
+      "reason": null,
+      "action": "auto_applied"
+    },
+    {
+      "slide": 43,
+      "image_id": "shape_9006",
+      "alt_text": "ASU logo in white text on a black background. The letters 'ASU' are stylized with a sunburst design integrated into the 'S', and a registered trademark symbol appears after the 'U'.",
+      "confidence": 5,
+      "decorative": false,
+      "reason": null,
+      "action": "auto_applied"
+    },
+    {
+      "slide": 43,
+      "image_id": "shape_9008",
+      "alt_text": "White speech bubble with black text reading 'Thank you!' on a black background, indicating the conclusion of the ASU AIR Spark Challenge kickoff presentation.",
+      "confidence": 5,
+      "decorative": false,
+      "reason": null,
+      "action": "auto_applied"
+    },
+    {
+      "slide": 43,
+      "image_id": "shape_9009",
+      "alt_text": "Yellow hand making a peace sign with two fingers extended, outlined in white, on a black background. The letters 'ASU' appear in white to the left of the hand.",
+      "confidence": 5,
+      "decorative": true,
+      "reason": null,
+      "action": "decorative_empty_alt"
+    }
+  ]
+}

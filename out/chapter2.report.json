@@ -1,0 +1,222 @@
+{
+  "source": "chapter2 for online instruction Part 1 (student).pptx",
+  "output": "out/chapter2.remediated.pptx",
+  "slides": 47,
+  "tables_detected": 0,
+  "shapes_written": 23,
+  "deck_summary": "This is an introductory physics lecture on **Motion in One Dimension** (Kinematics). It is designed for a beginning college or high school level.\n\nThe material covers the following topics in order:\n1. **Introduction to Dynamics and Kinematics**: Distinguishing between the description of motion and its causes.\n2. **Foundational Concepts**: Definitions of position, frames of reference, and the distinction between **scalar** and **vector** quantities.\n3. **Displacement**: Definition of displacement versus total distance traveled.\n4. **Speed vs. Velocity**: Definitions of average speed (scalar) and average velocity (vector), including their SI units.\n5. **Graphical Analysis of Velocity**: Using position-time graphs to determine average and instantaneous velocity via slopes and tangents.\n6. **Acceleration**: Definitions of average and instantaneous acceleration, including the relationship between the signs of velocity and acceleration to determine if an object is speeding up or slowing down.\n7. **Graphical Analysis of Acceleration**: Using velocity-time graphs to determine acceleration.\n8. **Kinematic Equations**: Introduction to equations used for motion with uniform (constant) acceleration.",
+  "runtime_seconds": 339.0,
+  "images_found": 23,
+  "auto_applied": 23,
+  "review_queue": 0,
+  "decorative": 0,
+  "images": [
+    {
+      "slide": 8,
+      "image_id": "shape_47",
+      "alt_text": "Two horizontal position axes labeled x(m) from -60 to 60. Top axis: car moves from point A at 30 m to point B at 52 m, displacement \u0394x = 22 m (positive). Bottom axis: car moves from point C at 38 m to point F at -53 m, displacement \u0394x = -91 m (negative). Arrows indicate direction of motion.",
+      "confidence": 5,
+      "decorative": false,
+      "reason": null,
+      "action": "auto_applied"
+    },
+    {
+      "slide": 9,
+      "image_id": "shape_48",
+      "alt_text": "Two parallel position axes labeled x (m) from -60 to 60. Top axis: car at 35 m moving right to 55 m (A to B). Bottom axis: car at 45 m moving left to 55 m (C to D), then to 35 m (E to F). Arrows indicate direction. Speed limit sign: 30 km/h.",
+      "confidence": 5,
+      "decorative": false,
+      "reason": null,
+      "action": "auto_applied"
+    },
+    {
+      "slide": 9,
+      "image_id": "shape_50",
+      "alt_text": "Position-time graph showing displacement x (m) versus time t (s). The curve starts at point A (0 s, 30 m), rises to point B (10 s, 55 m), then falls through points C (20 s, 40 m), D (30 s, 0 m), E (40 s, -40 m), to F (50 s, -60 m). Between A and B, \u0394t is 10 s and \u0394x is 25 m, illustrating average velocity.",
+      "confidence": 5,
+      "decorative": false,
+      "reason": null,
+      "action": "auto_applied"
+    },
+    {
+      "slide": 13,
+      "image_id": "shape_59",
+      "alt_text": "Example: The race by the tortoise and the hare. Information: A turtle and a rabbit engage in a footrace over 4.00 km. The rabbit runs 0.500 km, then naps for 1.50 hr. Upon awakening, it runs twice as fast and finishes in a total time of 1.75 hr, winning the race. Question: (a) What is the average speed of the rabbit?",
+      "confidence": 4,
+      "decorative": false,
+      "reason": "handwritten text is mostly legible, but some characters (e.g., 'hr' for hours) may be ambiguous to screen readers without context",
+      "action": "auto_applied"
+    },
+    {
+      "slide": 14,
+      "image_id": "shape_60",
+      "alt_text": "Handwritten solution to a physics problem: (b) What was the rabbit's average speed before it stopped for a nap? Diagram shows a 4.00 km race with a 0.50 km segment before a nap, labeled with v\u2081, \u0394t\u2081, and d\u2081, followed by a segment with v\u2082 = 2v\u2081, \u0394t\u2082, and d\u2082. Below, (a) Average speed of the race = total distance / total time = d/t.",
+      "confidence": 4,
+      "decorative": false,
+      "reason": "handwritten text and diagram are clear, but slight ambiguity in exact alignment of labels and symbols",
+      "action": "auto_applied"
+    },
+    {
+      "slide": 15,
+      "image_id": "shape_61",
+      "alt_text": "Handwritten physics problem solution. Part (b) explains solving for variable v\u2081 using algebra. Total distance is 4.00 km = d\u2081 + d\u2082 = 0.500 km + v\u2082(\u0394t\u2082). Given v\u2082 = 2v\u2081 and \u0394t\u2082 = 0.25 hr - d\u2081/v\u2081, which simplifies to 0.25 hr - 0.500 km/v\u2081. The top line shows 4.00 km / 1.75 hr = 2.29 km/hr.",
+      "confidence": 4,
+      "decorative": false,
+      "reason": "handwritten text is legible but slight variations in script may cause minor ambiguity in some symbols or units",
+      "action": "auto_applied"
+    },
+    {
+      "slide": 16,
+      "image_id": "shape_62",
+      "alt_text": "Handwritten derivation starting from Equation (1): 4.00 km = 0.500 km + v\u2082\u00b7\u0394t\u2082. Substituting v\u2082 = 2v\u2081 and using Equation (2), simplifies to 4.50 km = 0.500 v\u2081\u00b7hr. Thus, v\u2081 = 4.50 km / 0.500 hr = 9.00 km/hr.",
+      "confidence": 5,
+      "decorative": false,
+      "reason": null,
+      "action": "auto_applied"
+    },
+    {
+      "slide": 19,
+      "image_id": "shape_71",
+      "alt_text": "Diagram showing two paths from point P to point Q. The straight brown path represents displacement, labeled with initial position xi and final position xf. The curved blue path is longer, illustrating greater distance traveled. Both paths start at P and end at Q, with an arrow indicating direction along the x-axis.",
+      "confidence": 5,
+      "decorative": false,
+      "reason": null,
+      "action": "auto_applied"
+    },
+    {
+      "slide": 22,
+      "image_id": "shape_80",
+      "alt_text": "Position-time graph with x-axis labeled t (s) from 0 to 50 and y-axis labeled x (m) from -60 to 60. A straight orange line passes through three labeled points: A at (0, -20), B at (10, 0), and C at (30, 40). The constant slope indicates constant average velocity.",
+      "confidence": 5,
+      "decorative": false,
+      "reason": null,
+      "action": "auto_applied"
+    },
+    {
+      "slide": 23,
+      "image_id": "shape_83",
+      "alt_text": "Position-time graph showing motion with non-constant velocity. The curve starts at point A (0 s, 30 m), peaks at B (10 s, 50 m), and ends at F (50 s, -60 m). Straight lines connect A to B, A to C (20 s, 40 m), A to D (30 s, 0 m), A to E (40 s, -40 m), and A to F, illustrating average velocity as the slope of these lines. The x-axis is time in seconds, y-axis is position in meters.",
+      "confidence": 5,
+      "decorative": false,
+      "reason": null,
+      "action": "auto_applied"
+    },
+    {
+      "slide": 26,
+      "image_id": "shape_90",
+      "alt_text": "Position-time graph with x (m) on y-axis and t (s) on x-axis. Solid brown line shows motion: from origin O to point A (4s, 4m), constant position to point B (8s, 4m), then accelerating to point C (12s, 10m). Dashed blue line connects O to C, representing average velocity. Dashed green line is tangent at C, indicating instantaneous velocity.",
+      "confidence": 5,
+      "decorative": false,
+      "reason": null,
+      "action": "auto_applied"
+    },
+    {
+      "slide": 27,
+      "image_id": "shape_91",
+      "alt_text": "Example: Slowly moving train in an Amtrak station. Information: Position versus time graph for a train that slowly moves along a straight portion of track. Questions: (a) What is the average velocity for the total trip? (b) What is the average velocity during the first 4.00s of motion?",
+      "confidence": 4,
+      "decorative": false,
+      "reason": "Handwritten text is legible, but no graph is visible; context is clear from the text alone.",
+      "action": "auto_applied"
+    },
+    {
+      "slide": 28,
+      "image_id": "shape_92",
+      "alt_text": "Handwritten physics problem questions (c) through (e) asking for average and instantaneous velocity at specified times. Solution for (a) and (b) shows calculations: average velocity from 0 to 12.0s is +0.833 m/s using \u0394x/\u0394t = (10.0m - 0m)/(12.0s - 0s). For (b), average velocity from 0 to 4.00s is +1.00 m/s using (4.00m - 0m)/(4.00s - 0s).",
+      "confidence": 4,
+      "decorative": false,
+      "reason": "handwritten text is legible but slight variations in script may cause minor ambiguity in some characters",
+      "action": "auto_applied"
+    },
+    {
+      "slide": 29,
+      "image_id": "shape_93",
+      "alt_text": "Part (c): Average velocity formula v_A-B = (x_B - x_A)/(t_B - t_A) = (4.00 m - 4.00 m)/(4.00 s - 4.00 s) = 0 m/s. Part (d): The train travels at constant velocity because the position-time graph is a straight line between 0 s and 4.00 s, so average velocity equals instantaneous velocity at t = 2.00 s, which is 1.00 m/s.",
+      "confidence": 4,
+      "decorative": false,
+      "reason": "handwritten text is legible but minor ambiguity in spacing and alignment of subscripts and units",
+      "action": "auto_applied"
+    },
+    {
+      "slide": 30,
+      "image_id": "shape_94",
+      "alt_text": "Handwritten calculation for instantaneous velocity at t=9.0s. The tangent line intercepts the x-axis at (3.0s, 0m) and grazes the curve at (9.0s, 4.5m). Velocity is calculated as \u0394x/\u0394t = (4.5m - 0m)/(9.0s - 3.0s) = 0.75 m/s.",
+      "confidence": 4,
+      "decorative": false,
+      "reason": "Handwriting is mostly clear, but slight ambiguity in some characters (e.g., 's' vs 'f' in '9.0s').",
+      "action": "auto_applied"
+    },
+    {
+      "slide": 36,
+      "image_id": "shape_107",
+      "alt_text": "Velocity-time graph showing velocity v (m/s) on the y-axis and time t (s) on the x-axis from 0 to 4 seconds. The graph starts at origin, rises linearly to point A at (1, 2), continues to point B at (2.5, 4), then decreases linearly to point C at (3, 3) and ends at (4, 2).",
+      "confidence": 5,
+      "decorative": false,
+      "reason": null,
+      "action": "auto_applied"
+    },
+    {
+      "slide": 37,
+      "image_id": "shape_108",
+      "alt_text": "Example: Catching a fly ball in a baseball game. Information: A baseball player moves in a straight-line path to catch a fly ball hit to the outfield, as shown in the velocity-time curve. Question: What are the instantaneous accelerations of the player at points A, B, and C?",
+      "confidence": 4,
+      "decorative": false,
+      "reason": "handwritten text is legible but lacks the actual velocity-time graph referenced, making full context incomplete.",
+      "action": "auto_applied"
+    },
+    {
+      "slide": 38,
+      "image_id": "shape_109",
+      "alt_text": "Handwritten solution for acceleration calculations: (a) a_A = (2.00 m/s - 0 m/s) / (1.00 s - 0 s) = +2.00 m/s\u00b2; (b) a_B = (4.00 m/s - 4.00 m/s) / 1 s = 0 m/s\u00b2; (c) a_C = (2.00 m/s - 4.00 m/s) / 1.00 s = -2.00 m/s\u00b2. Uses average acceleration formula \u0394v/\u0394t.",
+      "confidence": 4,
+      "decorative": false,
+      "reason": "handwritten text is legible but slight variation in notation may cause minor ambiguity",
+      "action": "auto_applied"
+    },
+    {
+      "slide": 43,
+      "image_id": "shape_126",
+      "alt_text": "Handwritten derivation of kinematic equations for constant acceleration. Text states that instantaneous acceleration equals average acceleration, leading to the equation: a = \u0394v/\u0394t = (vf - vi)/(tf - ti), labeled as equation (1).",
+      "confidence": 4,
+      "decorative": false,
+      "reason": "handwriting is legible but minor ambiguity in some letter forms; context is clear from the lecture topic and equation structure.",
+      "action": "auto_applied"
+    },
+    {
+      "slide": 44,
+      "image_id": "shape_127",
+      "alt_text": "Handwritten derivation of average acceleration. Initial time set to t_i = 0, final time t_f = t. Initial velocity v_i = v_0 at t=0, final velocity v_f = v at time t. Acceleration a = (v_f - v_i)/(t_f - t_i) simplifies to (v - v_0)/t.",
+      "confidence": 4,
+      "decorative": false,
+      "reason": "handwriting is clear and legible, but slight ambiguity in exact symbol rendering (e.g., subscripts)",
+      "action": "auto_applied"
+    },
+    {
+      "slide": 45,
+      "image_id": "shape_128",
+      "alt_text": "Handwritten derivation of kinematic equations for constant acceleration. Shows v = v\u2080 + at (Equation 2), then explains average velocity as (v\u2080 + v)/2 (Equation 3). Derives \u0394x = (v\u2080 + v)/2 \u00d7 (t_f - t_i) using average velocity and time interval.",
+      "confidence": 4,
+      "decorative": false,
+      "reason": "handwritten text is legible but slight cursive may cause minor ambiguity for some screen readers",
+      "action": "auto_applied"
+    },
+    {
+      "slide": 46,
+      "image_id": "shape_129",
+      "alt_text": "Derivation of kinematic equations for constant acceleration. Shows \u0394x = (v\u2080 + v)/2 \u00b7 t (Equation 4), then substituting v = v\u2080 + at to derive \u0394x = v\u2080t + \u00bdat\u00b2 (Equation 5). Also shows derivation eliminating t: \u0394x = (v\u2080 + v)/2 \u00b7 \u00bda(v - v\u2080) = (v\u00b2 - v\u2080\u00b2)/(2a).",
+      "confidence": 4,
+      "decorative": false,
+      "reason": "handwritten math is legible but some symbols (like arrows) are slightly ambiguous",
+      "action": "auto_applied"
+    },
+    {
+      "slide": 47,
+      "image_id": "shape_130",
+      "alt_text": "Handwritten derivation of kinematic equations for constant acceleration. Shows \u0394x = 1/(2a)(v\u00b2 - v\u2080\u00b2), then v\u00b2 = v\u2080\u00b2 + 2a\u0394x (labeled as equation 6). Concludes with four equations: v = v\u2080 + at, \u0394x = \u00bd(v\u2080 + v)t, \u0394x = v\u2080t + \u00bdat\u00b2, and v\u00b2 = v\u2080\u00b2 + 2a\u0394x, derived from equations (2), (4), (5), and (6).",
+      "confidence": 4,
+      "decorative": false,
+      "reason": "handwritten text is legible but slight ambiguity in some symbols due to handwriting style",
+      "action": "auto_applied"
+    }
+  ]
+}
