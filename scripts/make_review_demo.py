@@ -1,6 +1,6 @@
 """Build a demo deck that deliberately trips the confidence gate.
 
-    .venv/bin/python scripts/make_review_demo.py "decks/some.pptx" -o decks_demo/
+    .venv/bin/python scripts/make_review_demo.py "decks/some.pptx" -o data/demo/
 
 Real lecture decks are mostly clean, so the review queue fires on roughly 1
 image in 500 -- which is honest, but leaves nothing to show. This takes a real
@@ -90,7 +90,7 @@ def blur_entry(src: Path, dst: Path, member: str, radius: float) -> tuple[bytes,
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("deck", help="a real .pptx to base the demo on")
-    ap.add_argument("-o", "--out", default="decks_demo", help="output folder")
+    ap.add_argument("-o", "--out", default="data/demo", help="output folder")
     ap.add_argument("-r", "--radius", type=float, default=12.0, help="blur radius")
     args = ap.parse_args()
 

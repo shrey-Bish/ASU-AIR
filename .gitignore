@@ -18,11 +18,10 @@ __pycache__/
 *.docx
 *.pdf
 
-# Test decks (downloaded, not ours to redistribute)
+# Test decks (downloaded, not ours to redistribute) and generated output
 decks/
 out/
 
-# Demo + working folders
-decks_demo/
-decks_legacy/
-pdfs/
+# Working data: test decks, conversions, demo output, challenge materials.
+# Not ours to redistribute, and large.
+data/

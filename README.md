@@ -99,6 +99,25 @@ the UI:
 
 `action` is one of `auto_applied`, `review_queue`, or `decorative_empty_alt`.
 
+## Repository layout
+
+```
+slidesight/        the package -- extract, describe, apply, wcag, pipeline, cli
+scripts/           evaluate.py, make_review_demo.py, screen_reader_preview.py
+fixtures/          sample_report.json -- build the UI against this, no key needed
+decks/             the 10 test decks (gitignored, not ours to redistribute)
+out/               generated decks, reports, audio (gitignored)
+data/              working material (gitignored)
+  legacy-ppt/        original .ppt files before conversion
+  demo/              the deliberately-degraded demo deck
+  pdfs/              PDFs, out of scope -- kept to test rejection
+  challenge/         Spark Challenge kickoff deck and workshop material
+```
+
+Docs: [STATUS.md](STATUS.md) full build review · [MODELS.md](MODELS.md) model IDs
+and why AIR · [INTEGRATION.md](INTEGRATION.md) the pipeline→UI contract ·
+[DEMO.md](DEMO.md) pitch script and what not to claim.
+
 ## How it works
 
 ```

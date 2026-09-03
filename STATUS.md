@@ -360,7 +360,7 @@ printf 'RC_LLM_API_KEY=%s\n' "$YOUR_KEY" > .env
 .venv/bin/python scripts/evaluate.py decks -o out/eval
 
 # the review-queue demo deck
-.venv/bin/python scripts/make_review_demo.py "decks/<a deck>.pptx" -o decks_demo -r 12
+.venv/bin/python scripts/make_review_demo.py "decks/<a deck>.pptx" -o data/demo -r 12
 ```
 
 Docs: [README.md](README.md) overview and results · [MODELS.md](MODELS.md) model
