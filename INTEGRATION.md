@@ -62,7 +62,18 @@ One per image. This is the contract — it will not change without telling you.
 
 `reason` is populated whenever confidence is 3 or below, and explains *why* in
 one line — that sentence is what makes the review queue persuasive rather than
-just a list.
+just a list. Two things it now surfaces, both worth showing verbatim in the
+queue:
+
+- the model reporting it could not read the image ("too blurry to read any text
+  or labels"), and
+- the cross-check catching it leaning on the slide text rather than the picture
+  ("values 30, 52 appear in the slide text but not in what the model reported
+  reading from the image").
+
+**The record shape above is stable and has not changed.** Internal diagnostic
+fields (`visible_text`, `context_leak`, `truncated`) exist on the model result
+but are deliberately kept out of the contract.
 
 ## Report-level fields
 
@@ -105,6 +116,33 @@ issue is `{check, slide, detail, severity}`. Checks are `missing_title`,
 
 This path needs no key and no network, so it is also the graceful-degradation
 demo if the gateway is down.
+
+## Bad uploads: what to catch
+
+A professor's upload box gets handed PDFs, legacy `.ppt`, and files with the
+wrong extension. All of those now raise **`ValueError` with a message written
+for a human** — show `str(exc)` directly, it is already plain English:
+
+```python
+from slidesight.pipeline import audit_only, remediate
+
+try:
+    report = asyncio.run(remediate(path, out_path, on_progress=cb))
+except ValueError as exc:
+    st.error(str(exc))     # already user-facing, no rewording needed
+```
+
+What each case produces:
+
+| Upload | Message |
+|---|---|
+| A real `.pdf` | Check the extension yourself first — PDF is out of scope by design. Point at ASU CIC's PDF tool. |
+| A PDF renamed `.pptx` | "… is a PDF with a .pptx name. SlideSight reads PowerPoint files only." |
+| A legacy `.ppt` renamed `.pptx` | "… is a legacy .ppt saved with a .pptx name. Convert it first: soffice --headless --convert-to pptx" |
+| Anything else unreadable | "… is not a readable .pptx file (…)." |
+
+Rejecting `.pdf` and `.ppt` on the extension before calling the pipeline gives a
+faster, clearer message — the CLI does exactly that, see `slidesight/cli.py`.
 
 ## Things worth knowing
 

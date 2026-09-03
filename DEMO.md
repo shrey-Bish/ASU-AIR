@@ -42,9 +42,14 @@ You can also see it without VoiceOver: right-click the picture → **Alt Text**
 - 23 of 23 pictures carried alt text after save and reopen; zip integrity intact.
 - 0 leftover filename `title` attributes (some readers announce those, so a
   student would otherwise hear `Screenshot 2026-09-02 at 9.25.40 AM.png`).
-- **Keynote opens the remediated file with no repair prompt.** PowerPoint itself
-  has not been tested — it is not installed on the dev machine. Test it before
-  claiming it on stage.
+- **Keynote opens the remediated file with no repair prompt.**
+- **LibreOffice Impress round-trip: 23/23 descriptions preserved byte-identical.**
+  A separate OOXML implementation reads the `descr` field, keeps it, and writes
+  it back — the same spec field PowerPoint and screen readers use.
+- **PowerPoint itself is still untested** — it is not installed on the dev
+  machine, and installing it needs an admin password. Run it once before
+  claiming it on stage:
+  `brew install --cask microsoft-powerpoint`
 
 ## Moment 2 — the tool knowing it does not know
 
