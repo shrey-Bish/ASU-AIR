@@ -127,33 +127,69 @@ Three details that are easy to get wrong, all verified against real decks:
 
 ## Results
 
-Two decks, measured end to end. Alt text was confirmed to persist after save and
-reopen, with zip integrity intact and the source file unmodified.
+Evaluated on **11 real US university lecture decks** — MIT OpenCourseWare
+(Comparative Media Studies CMS.595, AI 101, Theory of Computation) and Stanford
+CS106B. 426 slides, 467 images, start to finish in **602 seconds**.
 
-| Deck | Slides | Images | Applied | Decorative | Review | Runtime |
-|---|---|---|---|---|---|---|
-| College Physics ch.2 (47 slides, scanned handwriting + graphs) | 47 | 23 | 23 | 0 | 0 | 339s |
-| Spark Challenge kickoff deck | 45 | 15 | 7 | 8 | 0 | 40s |
+| | Count |
+|---|---|
+| Images found | 467 |
+| Alt text applied automatically | 307 |
+| Marked decorative (silenced) | 159 |
+| Sent to human review | 1 |
+| WCAG issues detected (nothing modified) | 517 |
+
+Confidence spread: 235 at 5, 231 at 4, 1 at 3. Alt text was confirmed to persist
+after save and reopen, with zip integrity intact and source files unmodified.
+
+WCAG issues by check: 213 missing slide titles, 201 instances of text under
+18pt, 90 slides that read out of visual order, 11 vague link texts, 2 tables
+with no header row.
+
+### The decorative result
+
+Stanford CS106B's *fundamentals* deck has 71 images, of which **65 are
+decorative** — the Stanford seal plus a briefcase icon repeated across roughly
+40 slides. Without this, a blind student hears "briefcase" forty times in one
+lecture. The 6 images that were described are the ones that carry teaching
+content: a TIOBE index line graph and console output windows.
 
 ### What did not work
 
-**The review queue is empty on both decks.** Across 38 images the model never
-scored below 4, so the confidence gate — the part of this project we consider
-most important — has not yet fired on real input. Both decks have clean, legible
-images, so this may be honest rather than broken, but it is unproven either way
-until we run decks with poor scans. We are not raising the threshold to
-manufacture a queue.
+**The review queue fired once in 467 images.** One image — an unlabelled
+abstract graphic in a media studies deck — came back at confidence 3 with the
+reason *"the purpose of the glowing shapes is inferred... no labels or context
+are visible in the image to confirm their meaning."* That is the gate working
+exactly as intended, but at 0.2% it is close to invisible.
 
-**Decorative detection needed a prompt fix.** The first run marked 1 of 15
-images decorative and wrote descriptions for five logos, including two ASU
-logos, at confidence 5. The model was treating "I can identify this clearly" as
-"this is worth describing." Deciding decorative *before* describing, and saying
-explicitly that recognising a logo is a reason to silence it rather than
-describe it, moved decorative from 1 to 8 and cut runtime by half.
+We tested whether the gate *can* fire rather than assuming. Degrading a known
+image by a measured amount moves confidence the right way: Gaussian blur r=6
+drops it to 3, r=14 to 2, both landing in the review queue. So the empty queue
+reflects clean source decks, not a broken gate. We did not raise the threshold
+to manufacture a queue.
+
+**The model leans on slide text.** Given a deliberately illegible image plus
+the real slide text, it reported values it could not possibly read. Given the
+*same* image with slide text from an unrelated lecture, it described the wrong
+subject entirely. The prompt now tells it to score by what is visible in the
+image alone, which makes it report the inference in `reason` — but a
+well-matched caption can still carry a wrong description past the gate. This is
+the most important known weakness.
+
+**Two bugs this evaluation caught**, both fixed:
+- A deck whose notes slide had no notes placeholder crashed extraction
+  (`notes_text_frame` is `None`, not an empty frame).
+- 26 TIFF images in one MIT deck were being routed to review as "unsupported"
+  when Pillow decodes them fine. Unsupported formats are now re-encoded; only
+  genuinely undecodable vector art goes to review.
 
 **Not yet verified:** nobody has opened a remediated file in desktop PowerPoint
 or run NVDA/VoiceOver against it. The XML is well-formed and reopens correctly
 in `python-pptx`, but that is not the same as a screen reader reading it aloud.
+
+**Department coverage is thin.** 11 decks across 4 subject areas, and 7 of them
+are from one course. PLAN.md calls for 20–30 decks from five or more
+departments; this is short of that.
 
 ## Limitations
 
