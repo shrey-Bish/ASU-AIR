@@ -1,6 +1,6 @@
 # SlideSight — build status and review
 
-Written 3 Sep 2026, 5:00 PM MST. Code freeze 6 PM, submission 11:59 PM.
+Written 3 Sep 2026, 3:00 PM MST. Code freeze 6 PM, submission 11:59 PM.
 
 This is the honest state of the project: what exists, how it works, what has
 been proven, what has not, and what is still owed. Read the "Not proven" and
@@ -54,7 +54,7 @@ on-premise inference are the parts that are ours.
 | Progress report filed | ⬜ **Still open — do this first** |
 | Team size 3–5 vs our 2 | ✅ Confirmed OK |
 
-15 commits, ~1627 lines of Python. Repo:
+19 commits, ~1627 lines of Python. Repo:
 [github.com/shrey-Bish/ASU-AIR](https://github.com/shrey-Bish/ASU-AIR)
 
 ---
@@ -69,15 +69,27 @@ on-premise inference are the parts that are ours.
 
 | File | Lines | Responsibility |
 |---|---|---|
-| `slidesight/extract.py` | 159 | Walk every shape recursing into groups; pull each image plus its own slide's title, body, notes. |
+| `slidesight/extract.py` | 177 | Walk every shape recursing into groups; pull each image plus its own slide's title, body, notes. |
 | `slidesight/describe.py` | 347 | One vision call per image → description, decorative flag, confidence, reason, and what it can literally read. Parses and salvages the reply, cross-checks it. |
-| `slidesight/apply.py` | 89 | The confidence gate and write-back to the OOXML `descr` attribute. |
+| `slidesight/apply.py` | 113 | The confidence gate and write-back to the OOXML `descr` attribute. |
 | `slidesight/pipeline.py` | 162 | Async orchestration, bounded concurrency, streaming callback, safe file opening. |
 | `slidesight/wcag.py` | 236 | Five detection-only accessibility checks. No model calls. |
 | `slidesight/cli.py` | 162 | Command line, progress output, input validation. |
 | `scripts/evaluate.py` | 122 | Batch-runs a folder of decks, writes the summary the results table comes from. |
 | `scripts/make_review_demo.py` | 124 | Builds a deliberately degraded deck — kept as calibration evidence. |
-| `scripts/screen_reader_preview.py` | 108 | Speaks what a screen reader announces before and after, via the macOS `say` voice. Can save audio for the video. |
+| `scripts/screen_reader_preview.py` | 98 | Speaks what a screen reader announces before and after, via the macOS `say` voice. Can save audio for the video. |
+
+### Where things live
+
+```
+slidesight/  the package        scripts/   evaluate · make_review_demo · screen_reader_preview
+fixtures/    sample report      decks/     the 10 test decks
+out/         generated output   data/      legacy-ppt · demo · pdfs · challenge
+```
+
+`decks/`, `out/` and `data/` are gitignored — the decks are not ours to
+redistribute. The repo carries code, docs, and `out/eval/eval_summary.json` as
+the evidence behind §5.
 
 ### Decisions that matter
 
