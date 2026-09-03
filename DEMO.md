@@ -87,12 +87,12 @@ blind student depends on — it stopped and asked for a human.
 
 ## Moment 3 — the silent images (optional, strong)
 
-Stanford CS106B's *fundamentals* deck: 71 images, 65 of them decorative — the
+Stanford CS106B's *fundamentals* deck: 71 images, 66 of them decorative — the
 Stanford seal plus a briefcase icon repeated across ~40 slides. Without this,
 a student hears "briefcase" forty times in one lecture. We write empty alt text
 so a screen reader skips them entirely.
 
-"We identified 65 images that should be silent" is a more sophisticated claim
+"We identified 66 images that should be silent" is a more sophisticated claim
 than "we described 307 images", and most teams will not have it.
 
 ## Numbers to quote
