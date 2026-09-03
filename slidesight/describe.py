@@ -85,33 +85,51 @@ Deck text:
 {text}"""
 
 
-def downscale(blob: bytes, max_edge: int = config.MAX_IMAGE_EDGE_PX) -> tuple[bytes, str]:
-    """Shrink oversized images before base64 encoding.
+def prepare_image(
+    blob: bytes, content_type: str, max_edge: int = config.MAX_IMAGE_EDGE_PX
+) -> tuple[bytes, str] | None:
+    """Get an image into a format the vision model accepts, or report it cannot be.
 
-    Falls back to the original bytes if Pillow is unavailable or the image
-    cannot be decoded -- never fail a description over a resize.
+    Two jobs. Oversized images are downscaled -- an 833KB screenshot costs
+    latency and vision tokens without adding legible detail. And formats the
+    gateway will not accept (TIFF and BMP are common in academic decks full of
+    scanned figures) are re-encoded as JPEG rather than being skipped.
+
+    Returns None only when the bytes cannot be decoded at all, which in practice
+    means vector art (EMF/WMF). Those go to the review queue instead of being
+    sent as unreadable bytes.
     """
+    web_ready = content_type in config.SUPPORTED_IMAGE_TYPES
     try:
         from PIL import Image
     except ImportError:
-        return blob, ""
+        return (blob, content_type) if web_ready else None
+
     try:
         img = Image.open(io.BytesIO(blob))
-        if max(img.size) <= max_edge:
-            return blob, ""
-        img.thumbnail((max_edge, max_edge), Image.LANCZOS)
-        if img.mode not in ("RGB", "L"):
-            img = img.convert("RGB")
-        buf = io.BytesIO()
-        img.save(buf, format="JPEG", quality=85)
-        return buf.getvalue(), "image/jpeg"
+        img.load()
     except Exception:
-        return blob, ""
+        # Undecodable by Pillow. If the gateway already accepts the type, let
+        # it try; otherwise this is genuinely unreadable.
+        return (blob, content_type) if web_ready else None
+
+    if web_ready and max(img.size) <= max_edge:
+        return blob, content_type
+
+    if max(img.size) > max_edge:
+        img.thumbnail((max_edge, max_edge), Image.LANCZOS)
+    if img.mode not in ("RGB", "L"):
+        img = img.convert("RGB")
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", quality=85)
+    return buf.getvalue(), "image/jpeg"
 
 
 def to_data_url(image: ImageRef) -> str:
-    blob, new_type = downscale(image.blob)
-    content_type = new_type or image.content_type
+    prepared = prepare_image(image.blob, image.content_type)
+    if prepared is None:
+        raise ValueError(f"cannot decode image format {image.content_type}")
+    blob, content_type = prepared
     return f"data:{content_type};base64,{base64.b64encode(blob).decode()}"
 
 

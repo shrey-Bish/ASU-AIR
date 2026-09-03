@@ -16,7 +16,7 @@ from openai import AsyncOpenAI
 from pptx import Presentation
 
 from . import apply, config, wcag
-from .describe import describe_image, summarize_deck
+from .describe import describe_image, prepare_image, summarize_deck
 from .extract import count_tables, deck_text, extract_images
 
 ProgressFn = Callable[[dict[str, Any]], None]
@@ -35,9 +35,11 @@ async def _describe_one(
     on_progress: ProgressFn | None,
 ) -> dict[str, Any]:
     """Describe one image, converting any failure into a review-queue row."""
-    if image.content_type not in config.SUPPORTED_IMAGE_TYPES:
+    if prepare_image(image.blob, image.content_type) is None:
+        # Undecodable, in practice vector art. A human gets it rather than the
+        # model being handed bytes it cannot read.
         record = apply.failure_record(
-            image, f"unsupported image format {image.content_type}"
+            image, f"cannot decode image format {image.content_type}"
         )
     else:
         async with semaphore:

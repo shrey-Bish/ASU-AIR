@@ -1,0 +1,92 @@
+{
+  "source": "sample_lecture.pptx",
+  "output": "out/sample_lecture.remediated.pptx",
+  "slides": 45,
+  "tables_detected": 2,
+  "shapes_written": 6,
+  "deck_summary": "This deck is an introductory kickoff presentation for the **ASU AIR Spark Challenge**, a university-level virtual hackathon for students, faculty, and staff.\n\nThe presentation covers the following topics in order:\n1. **Welcome and Logistics:** Opening remarks, participant lists, and Zoom etiquette.\n2. **Challenge Overview:** An explanation of the 2-day event (Sept 2\u20134) focused on building apps usi",
+  "runtime_seconds": 39.8,
+  "images_found": 8,
+  "auto_applied": 3,
+  "review_queue": 2,
+  "decorative": 3,
+  "images": [
+    {
+      "slide": 1,
+      "image_id": "shape_8661",
+      "alt_text": "",
+      "confidence": 5,
+      "decorative": true,
+      "reason": "The image is entirely black with no visible content, logos, or graphics. It serves no informational or structural purpose and is purely decorative or placeholder in nature.",
+      "action": "decorative_empty_alt"
+    },
+    {
+      "slide": 2,
+      "image_id": "shape_8666",
+      "alt_text": "ASU Enterprise Technology logo. The letters 'ASU' are large and stylized with a sunburst design inside the 'S'. To the right, 'Enterprise Technology' is written in two lines. Below, 'Arizona State University' appears in smaller text.",
+      "confidence": 5,
+      "decorative": true,
+      "reason": "one line, only when confidence is 3 or below",
+      "action": "decorative_empty_alt"
+    },
+    {
+      "slide": 2,
+      "image_id": "shape_8667",
+      "alt_text": "ASU Knowledge Enterprise logo. The ASU letters are stylized with a sunburst design inside the 'S'. To the right, 'Knowledge Enterprise' is written in bold white text. Below, 'Arizona State University' appears in a smaller white font.",
+      "confidence": 5,
+      "decorative": true,
+      "reason": "one line, only when confidence is 3 or below",
+      "action": "decorative_empty_alt"
+    },
+    {
+      "slide": 11,
+      "image_id": "shape_8749",
+      "alt_text": "Spark Challenge Submission Form with deadline of 11:59 p.m. MST on Sept. 3, 2026. Fields include Select your challenge (pre-filled: ASU AIR Spark Challenge), Submitter Name, Email, Team Name, Hero image (horizontal) with file upload, Team photo (optional) with file upload, and Solution name with placeholder text 'What do you call your solution/product?'.",
+      "confidence": 5,
+      "decorative": false,
+      "reason": "all labels, fields, and text are clearly legible in the image",
+      "action": "auto_applied"
+    },
+    {
+      "slide": 19,
+      "image_id": "shape_44",
+      "alt_text": "Scatter plot of experimental results. The x-axis is time in seconds; the y-axis label is cut off at the left edge.",
+      "confidence": 2,
+      "decorative": false,
+      "reason": "The y-axis label and units are cropped, so the quantity plotted cannot be read.",
+      "action": "review_queue"
+    },
+    {
+      "slide": 20,
+      "image_id": "shape_8819",
+      "alt_text": "Three smartphone screens showing the ASU Pocket app interface. Left screen: yellow background with 'Collect, curate and share your achievements' and 'Create Wallet' button. Middle screen: 'Here's where you can find your credentials!' with options to get sample or ASU credentials. Right screen: list of 5 achievements including 'Learnovator' from Arizona State University and courses from Rio Salado College.",
+      "confidence": 4,
+      "decorative": false,
+      "reason": "All text and labels are clearly legible; minor ambiguity in exact spacing or icon details, but core content and structure are accurate.",
+      "action": "auto_applied"
+    },
+    {
+      "slide": 22,
+      "image_id": "shape_51",
+      "alt_text": "",
+      "confidence": 1,
+      "decorative": false,
+      "reason": "cannot decode image format image/x-emf",
+      "action": "review_queue"
+    },
+    {
+      "slide": 26,
+      "image_id": "shape_8873",
+      "alt_text": "Discord server interface for the ASU AIR Spark Challenge. Two customization questions are visible: 'Select your Challenge' with 'ASU AIR Spark Challenge' selected, and 'Select your role' with options 'Hacker' (Challenge participant) and 'Challenge Staff' (Educator, Mentor, etc.). The user's profile shows Olivia Herneddo with Organizer and ASU AIR roles.",
+      "confidence": 5,
+      "decorative": false,
+      "reason": "all text and labels are clearly legible in the image",
+      "action": "auto_applied"
+    }
+  ],
+  "wcag": {
+    "total_issues": 0,
+    "by_check": {},
+    "issues": []
+  }
+}
