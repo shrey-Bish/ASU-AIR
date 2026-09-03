@@ -22,6 +22,11 @@ __pycache__/
 decks/
 out/
 
+# The two demo decks ARE committed so the team can pull them (see NEXT_STEPS.md).
+# ASU course material — remove before the repo goes anywhere public-facing.
+!demo-decks/
+!demo-decks/*.pptx
+
 # Working data: test decks, conversions, demo output, challenge materials.
 # Not ours to redistribute, and large.
 data/

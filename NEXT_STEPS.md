@@ -76,8 +76,13 @@ Open <http://127.0.0.1:8000> and walk all four steps. Tick these off:
 - [ ] Download the deck and confirm your approved text is really in it:
 
 ```bash
-.venv/bin/python scripts/screen_reader_preview.py ORIGINAL.pptx DOWNLOADED.pptx --slide N --silent
+.venv/bin/python scripts/screen_reader_preview.py \
+    "demo-decks/asu-intro-machine-learning.pptx" ~/Downloads/remediated_*.pptx --slide 13
 ```
+
+That plays the before and after aloud. On slide 13 the "before" is the Windows
+file path — drop `--silent` in to hear it, or add `--save out/audio/demo` to
+write clips for the video.
 
 **Results**
 - [ ] The four counts match the numbers on the processing screen
@@ -104,10 +109,27 @@ Open <http://127.0.0.1:8000> and walk all four steps. Tick these off:
 
 ## 3. The two decks to demo
 
-Pick these two. Both are **real ASU course material**, which matters — we are
-pitching to ASU.
+Both are committed to the repo, so just pull:
 
-### Primary: `U1_Introduction to Machine Learning (1).pptx`
+```bash
+git pull
+ls demo-decks/
+#   asu-intro-machine-learning.pptx     <- primary
+#   asu-phy111-chapter2-part1.pptx      <- secondary
+```
+
+Run either through the web app, or from the command line:
+
+```bash
+.venv/bin/python -m slidesight "demo-decks/asu-intro-machine-learning.pptx" \
+    -o out/demo-ml.pptx -r out/demo-ml.json
+```
+
+Both are **real ASU course material**, which matters — we are pitching to ASU.
+They are there for team testing, not redistribution; see
+[demo-decks/README.md](demo-decks/README.md).
+
+### Primary: `demo-decks/asu-intro-machine-learning.pptx`
 
 **This is the demo.** 23 images, about 50 seconds — short enough to run live.
 
@@ -123,7 +145,7 @@ pitching to ASU.
 
 Run it live, then open the review queue and read one "why flagged" aloud.
 
-### Secondary: `chapter2 for online instruction Part 1 (student).pptx`
+### Secondary: `demo-decks/asu-phy111-chapter2-part1.pptx`
 
 PHY 111 physics. 23 images, about 45 seconds — the fastest deck we have.
 
