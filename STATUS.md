@@ -39,8 +39,8 @@ on-premise inference are the parts that are ours.
 |---|---|
 | Extraction (incl. images nested in groups) | ✅ Done, verified |
 | Vision descriptions via ASU AIR | ✅ Done, verified on 405 images |
-| Confidence gate + review queue | ✅ Done, fires on real decks |
-| Decorative detection + silencing | ✅ Done, verified |
+| Confidence gate + review queue | ✅ Done, 19 items on real decks |
+| Decorative detection + silencing | ✅ Done + guarded (see §5) |
 | Write-back into the file | ✅ Done, verified in 3 readers |
 | Accessibility (WCAG) checks — 5 of 6 | ✅ Done, verified |
 | Contrast check | ❌ Cut, deliberately (see §7) |
@@ -136,18 +136,41 @@ negative; it had found 16 hyperlinks and judged all of them descriptive.
 ### Evaluation run — 9 real university decks
 
 Five ASU course decks, two MIT OpenCourseWare, two Stanford CS106B.
-**517 slides, 405 images, 514 seconds.**
+**517 slides, 405 images, 401 seconds.**
 
 | | Count |
 |---|---|
 | Images found | 405 |
-| Alt text applied automatically | 213 |
-| Marked decorative (silenced) | 187 |
-| Sent to human review | 5 |
+| Alt text applied automatically | 206 |
+| Marked decorative (silenced) | 180 |
+| Sent to human review | 19 |
 | Tables detected (reported, not fixed) | 4 |
 | WCAG issues detected | 590 |
 
-Confidence spread: 274 at 5, 126 at 4, 2 at 3, 3 at 2.
+Confidence spread: 281 at 5, 121 at 4, 3 at 3.
+
+### Silencing is the dangerous decision — and it was unguarded
+
+Reviewed every image the model silenced. Two findings.
+
+**Mostly right, and the headline number is misleading in a good way.** Stanford
+CS106B silenced 66 images, but they are only **5 unique pictures**: a briefcase
+icon repeated 37 times, an arrow 26 times, plus the Stanford seal, the C++ logo
+and a stock photo. Both ASU algorithms decks silenced exactly 2 unique images
+each — the ASU Fulton logo and a divider bar. Quote "66 silenced" as "37 copies
+of one icon a student would otherwise hear announced", not as 66 judgements.
+
+**But MIT AI 101 had real false positives.** Photographs of cats, dogs and a
+crawling baby were called decorative on slides reading *"1. Define a problem"*,
+*"6. Test the model"*, and *"three types of learning"*. In a machine-learning
+course those animals **are** the teaching content; silencing them deletes the
+slide's point, and by design it never reached a human.
+
+**Fix, now shipped:** a decorative verdict is not trusted on its own. Any image
+covering more than 12% of the slide goes to review with the reason stated.
+Logos and template icons measure 1–8% and are unaffected. This reroutes 9% of
+previously-silenced images, catches every AI 101 case, and moved the review
+queue from 5 to 19.
 WCAG breakdown: 240 small text, 210 reading order, 135 missing titles,
 3 tables without headers, 2 vague links.
 
@@ -174,7 +197,7 @@ WCAG breakdown: 240 small text, 210 reading order, 135 missing titles,
 
 ### The confidence gate fires on real input
 
-All five review items are genuine low confidence, four from one ASU deck:
+19 review items: 16 from the decorative guard, 3 genuine low confidence:
 
 > "The image is extremely blurry and cropped, showing only a portion of what
 > appears to be the digit…"
@@ -183,6 +206,13 @@ All five review items are genuine low confidence, four from one ASU deck:
 > lecture topic and slide text rather than reading it in the image."
 
 The second is the cross-check catching the model leaning on slide text.
+
+**On the threshold.** The model answers 5 for 281 images and 4 for 121.
+Auto-applying 4-and-above is deliberate: requiring 5 would send another 121
+images (30% of the corpus) to a human, more than a reviewer can absorb. If a
+judge asks whether a gate that rarely fires is doing real work, the calibration
+table above is the answer — it responds to degradation, so a low rate means
+clean inputs, not a dead gate.
 
 ### Calibration was tested, not assumed
 
@@ -208,6 +238,7 @@ real material rather than by reading the code.
 
 | Bug | Effect | Fix |
 |---|---|---|
+| **Decorative verdicts were never second-guessed** | **Teaching photos in an AI course silently deleted from the accessible version — the most harmful failure in the system, and invisible by design** | Decorative calls on images >12% of slide area go to review |
 | `notes_text_frame` can be `None` when a notes slide exists | Extraction crashed on one MIT deck | Guard for `None` |
 | TIFF and BMP rejected as "unsupported" | 26 images in one deck went to review as failures — **a queue full of things a human could not act on** | Pillow re-encodes them; only undecodable vector art now goes to review |
 | Replies truncated by the token limit were discarded | 3 good descriptions reported as low-confidence failures | Salvage the fields from partial JSON; token cap raised |
