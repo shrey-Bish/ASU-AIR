@@ -135,19 +135,22 @@ negative; it had found 16 hyperlinks and judged all of them descriptive.
 
 ### Evaluation run — 9 real university decks
 
-Five ASU course decks, two MIT OpenCourseWare, two Stanford CS106B.
-**517 slides, 405 images, 401 seconds.**
+Eight ASU course decks (five computer science, **three PHY 111 physics**), one MIT OpenCourseWare, one Stanford CS106B.
+**505 slides, 380 images, 478 seconds.**
 
 | | Count |
 |---|---|
-| Images found | 405 |
-| Alt text applied automatically | 206 |
-| Marked decorative (silenced) | 180 |
-| Sent to human review | 19 |
-| Tables detected (reported, not fixed) | 4 |
-| WCAG issues detected | 590 |
+| Images found | 380 |
+| Alt text applied automatically | 222 |
+| Marked decorative (silenced) | 141 |
+| Sent to human review | 17 |
+| WCAG issues detected | 531 |
 
-Confidence spread: 281 at 5, 121 at 4, 3 at 3.
+Confidence spread: 232 at 5, 144 at 4, 4 at 3. Every column above sums to the
+per-deck table below.
+
+WCAG breakdown: 197 small text, 183 reading order, 148 missing titles,
+3 tables without headers.
 
 ### Silencing is the dangerous decision — and it was unguarded
 
@@ -168,23 +171,24 @@ slide's point, and by design it never reached a human.
 
 **Fix, now shipped:** a decorative verdict is not trusted on its own. Any image
 covering more than 12% of the slide goes to review with the reason stated.
-Logos and template icons measure 1–8% and are unaffected. This reroutes 9% of
+Verified logos and template icons measure 2–8.6% and are unaffected. It catches
+9 of the 12 AI 101 misclassifications — see the README for why not all 12, and
+what that costs. This reroutes 9% of
 previously-silenced images, catches every AI 101 case, and moved the review
-queue from 5 to 19.
-WCAG breakdown: 240 small text, 210 reading order, 135 missing titles,
-3 tables without headers, 2 vague links.
 
 | Deck | Slides | Images | Applied | Decor. | Review | WCAG | Time |
 |---|---|---|---|---|---|---|---|
-| ASU CSE 450 (algorithms) | 66 | 10 | 4 | 5 | 1 | 114 | 18s |
-| ASU CSE 551 (algorithms) | 60 | 6 | 1 | 5 | 0 | 131 | 12s |
-| ASU CSE 511 (data processing) | 49 | 91 | 57 | 30 | 4 | 54 | 111s |
-| ASU Intro to Machine Learning | 19 | 23 | 8 | 15 | 0 | 6 | 40s |
-| ASU Unsupervised Learning | 37 | 22 | 15 | 7 | 0 | 14 | 37s |
-| MIT AI 101 | 54 | 77 | 66 | 11 | 0 | 48 | 107s |
-| MIT CMS.595 Media Studies | 23 | 52 | 28 | 24 | 0 | 47 | 65s |
-| Stanford CS106B fundamentals | 102 | 71 | 5 | 66 | 0 | 84 | 53s |
-| Stanford CS106B welcome | 107 | 53 | 29 | 24 | 0 | 92 | 71s |
+| ASU CSE 450 — algorithms | 66 | 10 | 4 | 5 | 1 | 114 | 16.7s |
+| ASU CSE 551 — algorithms | 60 | 6 | 0 | 6 | 0 | 131 | 14.2s |
+| **ASU PHY 111 — physics ch.5** | 29 | 24 | 23 | 0 | 1 | 29 | 47.5s |
+| ASU CSE 511 — data processing | 49 | 91 | 47 | 41 | 3 | 54 | 50.7s |
+| ASU — intro machine learning | 19 | 23 | 8 | 15 | 0 | 6 | 24.0s |
+| ASU — unsupervised learning | 37 | 22 | 15 | 7 | 0 | 14 | 67.7s |
+| **ASU PHY 111 — physics ch.2 pt1** | 47 | 23 | 23 | 0 | 0 | 19 | 63.8s |
+| **ASU PHY 111 — physics ch.2 pt2** | 42 | 33 | 33 | 0 | 0 | 32 | 66.6s |
+| MIT AI 101 — EECS | 54 | 77 | 64 | 2 | 11 | 48 | 74.4s |
+| Stanford CS106B — fundamentals | 102 | 71 | 5 | 65 | 1 | 84 | 50.2s |
+| **Total** | **505** | **380** | **222** | **141** | **17** | **531** | **478s** |
 
 ### Write-back verified in three independent readers
 
@@ -337,6 +341,8 @@ IDs and why AIR · [INTEGRATION.md](INTEGRATION.md) the pipeline→UI contract �
    That is the pitch's best 15 seconds and the one claim still unverifiable.
 3. Person B: the review queue is the centrepiece. Make it the first thing on
    screen, not below the fold.
-4. Only then: more decks, more departments.
+4. **Not** more decks. Ten decks with a false-positive analysis beats twenty
+   without one. The coverage gap belongs on the limitations slide, not in the
+   remaining hours.
 
 The tool is in good shape. The deliverables are the risk now, not the code.

@@ -1,7 +1,15 @@
 # Demo script — the 90-second pitch
 
-Everything here is reproducible from the repo. Two moments carry the pitch: the
-screen reader before and after, and the tool refusing to guess.
+Everything here is reproducible from the repo.
+
+**Order matters.** Lead with the blind student hearing "shape 4". Then go
+straight to Moment 2 — the failure we caught in our own tool — *before* any
+count of how many images were described.
+
+Every team will demo something working. Almost none will demo something they
+caught themselves doing wrong. It also answers the hardest question available
+— *how do you know your tool isn't quietly wrong?* — with: we assumed it was,
+and went looking.
 
 ## Moment 1 — what a blind student actually hears
 
@@ -19,6 +27,35 @@ reader announces the shape name:
 > environment showing colorful anatomical structures and tools. The physical
 > console includes hand controls and foot pedals for manipulating the virtual
 > instruments."
+
+### Fastest way to hear it — no VoiceOver setup needed
+
+macOS ships the same speech engine VoiceOver uses. This speaks exactly what a
+screen reader announces for each image, before and after:
+
+```bash
+.venv/bin/python scripts/screen_reader_preview.py \
+    "decks/U1_Introduction to Machine Learning (1).pptx" \
+    "out/demo_ASU_ML.pptx" --slide 13
+```
+
+Add `--save out/audio/demo` to write `.aiff` files instead of playing them —
+drop those straight into the video. `--silent` prints without speaking.
+
+**What it reveals on slide 13 of the real ASU deck:**
+
+> **BEFORE:** "C:\Users\symbiosis\Desktop\IB2COM\box_fls.png"
+> **AFTER:** "Laparoscopic surgery simulator with a monitor displaying a virtual
+> surgical environment showing colorful anatomical structures and tools…"
+
+That before is not a placeholder we invented. PowerPoint auto-filled the alt
+text with the source file path, so a blind student in that course hears a
+Windows directory read out letter by letter. Other images on the same slide
+have no alt text at all and are announced as "Picture 6".
+
+This is a preview, not proof — it reads the file the same way we wrote it, so it
+does not independently verify PowerPoint exposes the field. Run VoiceOver below
+for that.
 
 ### Running VoiceOver yourself
 
@@ -51,39 +88,46 @@ You can also see it without VoiceOver: right-click the picture → **Alt Text**
   claiming it on stage:
   `brew install --cask microsoft-powerpoint`
 
-## Moment 2 — the tool knowing it does not know
+## Moment 2 — we caught our own tool deleting content
 
-Real lecture decks are mostly clean, so the confidence gate fires on roughly one
-image in several hundred. That is honest, but it leaves nothing to show. So we
-built a controlled demonstration.
+Silencing an image is the dangerous decision. A bad description gets read by a
+human and corrected. A wrongly-silenced diagram is removed from the blind
+student's experience entirely — and a confidence gate on *descriptions* does
+nothing to protect it. Nothing reviewed those calls.
 
-```bash
-.venv/bin/python scripts/make_review_demo.py \
-    "decks/U1_Introduction to Machine Learning (1).pptx" -o decks_demo -r 12
-```
+So we reviewed every image the tool had silenced.
 
-This copies a real ASU deck and applies Gaussian blur to **exactly one image**,
-leaving every other byte identical.
+Most were right. But in MIT's AI 101 deck, photographs of cats, dogs and a
+crawling baby had been marked decorative — on slides reading **"1. Define a
+problem"**, **"6. Test the model"**, and **"three types of learning:
+supervised, unsupervised, reinforcement."**
 
-**Say plainly that the blur is ours.** The degradation is constructed; what it
-proves is not. Same pipeline, same deck, one variable changed:
+In a machine-learning course those animals *are* the teaching content. Our tool
+was deleting the point of the slide from the accessible version, and by design
+no human would ever have seen it happen.
 
-| Image on slide 13 | Clean deck | Blurred deck |
-|---|---|---|
-| shape_50 | c4 → applied | c4 → applied |
-| **shape_51** | **c4 → applied** | **c2 → review queue** |
-| shape_54 | c4 → applied | c4 → applied |
+**The fix, shipped the same afternoon:** a decorative verdict is no longer
+trusted on its own. Any image covering more than 12% of the slide goes to human
+review with the reason stated. Verified logos and template icons measure
+2–8.6%; the misclassified photos measured 10.3–42.7%.
 
-Deck totals: clean `8 applied / 15 decorative / 0 review` → blurred
-`7 applied / 15 decorative / 1 review`.
+Say the limitation out loud — it is the strongest part:
 
-One image degraded, one image diverted. The reason it gives:
+> "It catches 9 of the 12. A cat at 6.7% of the slide still slips through,
+> because no size threshold that catches it leaves the queue usable. Size is a
+> proxy for importance and an imperfect one."
 
-> "Image is too blurry to read any text or labels; description is based on
-> visual interpretation of shapes and colors, not legible content."
+## Moment 2b — the gate, on real input (optional)
 
-That sentence is the pitch. It did not write a confident guess into a file a
-blind student depends on — it stopped and asked for a human.
+19 images reached the review queue on real decks, with reasons like:
+
+> "The image is extremely blurry and cropped, showing only a portion of what
+> appears to be the digit…"
+
+**Demo the real queue, not the blurred deck.** `scripts/make_review_demo.py`
+still exists and is worth keeping as calibration evidence — degrading one image
+by a measured amount moves confidence the right way (blur r=6 → 3, r=14 → 2) —
+but with real review items you no longer need a constructed failure on stage.
 
 ## Moment 3 — the silent images (optional, strong)
 
@@ -110,3 +154,4 @@ See the Results table in [README.md](README.md); the raw data is
 - That PowerPoint has been tested. Keynote has.
 - That a screen reader has been run end to end, until you have run it.
 - That the blurred image was a naturally occurring failure.
+- That the decorative guard catches everything. It catches 9 of 12; say so.

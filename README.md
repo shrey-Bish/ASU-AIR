@@ -129,20 +129,20 @@ Three details that are easy to get wrong, all verified against real decks:
 
 ## Results
 
-Evaluated on **9 real university lecture decks** — five ASU course decks
-(CSE 450, CSE 551, CSE 511, and two machine-learning units), two MIT
-OpenCourseWare decks (AI 101, CMS.595), and two Stanford CS106B decks.
-**517 slides, 405 images, 401 seconds.**
+Evaluated on **10 real university lecture decks** — eight ASU course decks
+(CSE 450, CSE 551, CSE 511, two machine-learning units, and **three PHY 111
+physics decks**), MIT's AI 101, and Stanford CS106B.
+**505 slides, 380 images, 478 seconds.**
 
 | | Count |
 |---|---|
-| Images found | 405 |
-| Alt text applied automatically | 206 |
-| Marked decorative (silenced) | 180 |
-| Sent to human review | 19 |
-| WCAG issues detected (nothing modified) | 590 |
+| Images found | 380 |
+| Alt text applied automatically | 222 |
+| Marked decorative (silenced) | 141 |
+| Sent to human review | 17 |
+| WCAG issues detected (nothing modified) | 531 |
 
-Confidence spread: 281 at 5, 121 at 4, 3 at 3. Write-back verified in three
+Confidence spread: 232 at 5, 144 at 4, 4 at 3. Write-back verified in three
 independent readers — reopened in `python-pptx` with zip integrity intact and
 the source unmodified, opened in **Keynote** with no repair prompt, and
 round-tripped through **LibreOffice Impress with all 23 descriptions preserved
@@ -170,13 +170,27 @@ the teaching content**. Silencing them deletes the point of the slide.
 So a decorative verdict is no longer trusted on its own. Any image covering more
 than 12% of the slide goes to human review instead of being silenced, with the
 reason stated. Logos and template icons run 1–8% of slide area and are
-unaffected; this reroutes 9% of previously-silenced images, including every one
-of the AI 101 misclassifications.
+unaffected; this reroutes 9% of previously-silenced images.
+
+**Why 12%, and what it still misses.** The two populations were measured, not
+guessed. Images we confirmed by eye as genuinely decorative — logos, template
+icons, dividers — run **2.0-8.6%** of slide area, with one outlier at 14.1% (a
+full-width stock photo). The AI 101 teaching photos wrongly silenced run
+**10.3-42.7%**. The populations *overlap*, so there is no clean line; 12% is a
+tradeoff placed inside that overlap.
+
+The cost is explicit: **it catches 9 of the 12 AI 101 misclassifications, not
+all of them.** A cat photo at 6.7% on a slide reading "2. Find data" is still
+silenced, because no size threshold that catches it would leave the queue
+usable. Size is a proxy for importance and an imperfect one. Repetition was
+tested as a second signal -- decorative icons repeat, content usually does not
+-- but it pushes 67 more images into review, most of them genuine one-off
+logos, so it was rejected as a queue flood.
 
 ### The confidence gate
 
-19 images reached the review queue — 16 caught by the decorative guard above,
-3 by genuinely low confidence:
+17 images reached the review queue — most caught by the decorative guard above,
+the rest by genuinely low confidence:
 
 > "The image is extremely blurry and cropped, showing only a portion of what
 > appears to be the digit…"
@@ -189,9 +203,9 @@ confidence the right way — Gaussian blur r=6 → 3, r=14 → 2, both landing i
 review — so a low rate reflects clean source decks, not a dead gate.
 `scripts/make_review_demo.py` reproduces this on demand.
 
-On the threshold: the model returns 5 for 281 images and 4 for 121. Auto-applying
-4-and-above is a deliberate choice; requiring 5 would route another 121 images
-(30% of the corpus) to a human, which is more than a reviewer can absorb.
+On the threshold: the model returns 5 for 232 images and 4 for 144. Auto-applying
+4-and-above is a deliberate choice; requiring 5 would route another 144 images
+(38% of the corpus) to a human, which is more than a reviewer can absorb.
 
 ### Bugs found by running real decks
 
