@@ -135,7 +135,7 @@ negative; it had found 16 hyperlinks and judged all of them descriptive.
 
 ## 5. Evidence
 
-### Evaluation run — 9 real university decks
+### Evaluation run — 10 real university decks
 
 Eight ASU course decks (five computer science, **three PHY 111 physics**), one MIT OpenCourseWare, one Stanford CS106B.
 **505 slides, 380 images, 478 seconds.**
@@ -174,9 +174,16 @@ slide's point, and by design it never reached a human.
 **Fix, now shipped:** a decorative verdict is not trusted on its own. Any image
 covering more than 12% of the slide goes to review with the reason stated.
 Verified logos and template icons measure 2–8.6% and are unaffected. It catches
-9 of the 12 AI 101 misclassifications — see the README for why not all 12, and
-what that costs. This reroutes 9% of
-previously-silenced images, catches every AI 101 case, and moved the review
+9 of the 12 AI 101 misclassifications, not all of them — see the README for why,
+and what that costs. It reroutes 9% of previously-silenced images.
+
+Working through on MIT AI 101, the deck where the problem was found: decorative
+went **11 → 2** and review **0 → 11**, which is the nine rerouted images plus
+one genuine low-confidence item. Applied moved 66 → 64 between runs; that is
+model non-determinism at temperature 0.2, not the guard. Small decks show this
+more — CSE 551 has six images and one flipped from applied to decorative between
+runs. Worth knowing before quoting any single number to a decimal place.
+
 
 | Deck | Slides | Images | Applied | Decor. | Review | WCAG | Time |
 |---|---|---|---|---|---|---|---|
@@ -191,6 +198,12 @@ previously-silenced images, catches every AI 101 case, and moved the review
 | MIT AI 101 — EECS | 54 | 77 | 64 | 2 | 11 | 48 | 74.4s |
 | Stanford CS106B — fundamentals | 102 | 71 | 5 | 65 | 1 | 84 | 50.2s |
 | **Total** | **505** | **380** | **222** | **141** | **17** | **531** | **478s** |
+
+**The three physics decks silenced nothing — 0 decorative across 80 images, 79
+of 80 described.** That is the right answer: PHY 111 slides are motion diagrams,
+graphs and worked equations, with no logo furniture. Set against Stanford
+CS106B, where 65 of 71 images are template icons, it is evidence the classifier
+tracks what an image *is* rather than firing at a fixed rate.
 
 ### Write-back verified in three independent readers
 
@@ -220,7 +233,7 @@ audio files for the pitch video.
 
 ### The confidence gate fires on real input
 
-19 review items: 16 from the decorative guard, 3 genuine low confidence:
+17 review items: 13 from the decorative guard, 4 genuine low confidence:
 
 > "The image is extremely blurry and cropped, showing only a portion of what
 > appears to be the digit…"
@@ -230,9 +243,10 @@ audio files for the pitch video.
 
 The second is the cross-check catching the model leaning on slide text.
 
-**On the threshold.** The model answers 5 for 281 images and 4 for 121.
-Auto-applying 4-and-above is deliberate: requiring 5 would send another 121
-images (30% of the corpus) to a human, more than a reviewer can absorb. If a
+**On the threshold.** The model answers 5 for 232 images and 4 for 144.
+Auto-applying 4-and-above is deliberate: requiring 5 would send another 144
+images — **38% of the corpus** — to a human, far more than a reviewer can
+absorb. If a
 judge asks whether a gate that rarely fires is doing real work, the calibration
 table above is the answer — it responds to degradation, so a low rate means
 clean inputs, not a dead gate.
@@ -297,8 +311,11 @@ real material rather than by reading the code.
 - **PDF.** The tool rejects it with a message pointing at ASU CIC's existing
   PDF tool. This is scope discipline, not an oversight.
 
-**Coverage gap:** 9 decks across ~4 subject areas, heavily computer science. The
-plan asks for 20–30 decks from five or more departments.
+**Coverage gap:** 10 decks across two departments — five computer science, three
+physics, two general machine learning — plus MIT and Stanford CS. The plan asks
+for 20–30 decks from five or more departments, so the count and the department
+spread are both short. Deliberate: at this point ten decks with a false-positive
+analysis is worth more than twenty without one.
 
 ---
 
@@ -354,10 +371,11 @@ IDs and why AIR · [INTEGRATION.md](INTEGRATION.md) the pipeline→UI contract �
 
 ## 10. What I would do with the remaining hours
 
-1. File the progress report and message the organisers about team size. Neither
-   is code and both can sink the submission.
-2. Install PowerPoint, open a remediated deck, run VoiceOver once, record it.
-   That is the pitch's best 15 seconds and the one claim still unverifiable.
+1. **File the progress report.** Ten minutes, still open, and the plan says
+   missing it risks disqualification.
+2. Run VoiceOver once on a before/after deck and record it — the one claim still
+   unverified. Installing PowerPoint (`brew install --cask microsoft-powerpoint`,
+   needs an admin password) would also close the untested-in-PowerPoint gap.
 3. Person B: the review queue is the centrepiece. Make it the first thing on
    screen, not below the fold.
 4. **Not** more decks. Ten decks with a false-positive analysis beats twenty

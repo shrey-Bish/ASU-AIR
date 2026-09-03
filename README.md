@@ -189,8 +189,8 @@ logos, so it was rejected as a queue flood.
 
 ### The confidence gate
 
-17 images reached the review queue — most caught by the decorative guard above,
-the rest by genuinely low confidence:
+17 images reached the review queue — 13 caught by the decorative guard above,
+4 by genuinely low confidence:
 
 > "The image is extremely blurry and cropped, showing only a portion of what
 > appears to be the digit…"
@@ -229,8 +229,10 @@ Every one of these was found by running real material, not by reading code.
 - **The model can still be fooled.** An illegible image paired with *matching*
   slide text can carry a wrong description past the gate. Mitigated, not
   eliminated.
-- **Coverage is thin** — 9 decks, heavily computer science. PLAN.md asks for
-  20–30 across five or more departments.
+- **Coverage is short of the plan** — 10 decks across two departments (five
+  computer science, three physics, two general ML). PLAN.md asks for 20–30 from
+  five or more departments. A deliberate trade: ten decks with a false-positive
+  analysis beats twenty without one.
 
 ## Accessibility report
 
