@@ -94,7 +94,11 @@ def slide_context(slide, number: int) -> SlideContext:
 
     notes = ""
     if slide.has_notes_slide:
-        notes = (slide.notes_slide.notes_text_frame.text or "").strip()
+        # A notes slide can exist with no notes placeholder on it, in which
+        # case notes_text_frame is None rather than an empty frame.
+        frame = slide.notes_slide.notes_text_frame
+        if frame is not None:
+            notes = (frame.text or "").strip()
 
     return SlideContext(
         number=number,

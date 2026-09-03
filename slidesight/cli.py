@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 from .apply import ACTION_AUTO, ACTION_DECORATIVE, ACTION_REVIEW
-from .pipeline import remediate
+from .pipeline import audit_only, remediate
 
 MARK = {ACTION_AUTO: "applied ", ACTION_DECORATIVE: "decor.  ", ACTION_REVIEW: "REVIEW  "}
 
@@ -31,8 +31,34 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--no-summary", action="store_true", help="skip the per-deck summary call"
     )
+    p.add_argument(
+        "--wcag-only",
+        action="store_true",
+        help="run the WCAG checks only, no model calls",
+    )
     p.add_argument("--quiet", action="store_true", help="only print the final counts")
     return p
+
+
+CHECK_LABEL = {
+    "missing_title": "slides with no title",
+    "small_text": "slides with text under 18pt",
+    "table_no_header": "tables with no header row",
+    "vague_link": "vague link text",
+    "reading_order": "slides that read out of visual order",
+}
+
+
+def print_wcag(report: dict) -> None:
+    audit = report.get("wcag") or {}
+    total = audit.get("total_issues", 0)
+    print(f"\nAccessibility report -- {total} issue(s) detected, none modified")
+    for check, count in sorted(audit.get("by_check", {}).items(), key=lambda kv: -kv[1]):
+        print(f"  {count:>4}  {CHECK_LABEL.get(check, check)}")
+    for issue in audit.get("issues", [])[:8]:
+        print(f"        slide {issue['slide']:>3}  {issue['check']}: {issue['detail'][:80]}")
+    if total > 8:
+        print(f"        ... {total - 8} more in the JSON report")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -51,6 +77,19 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 1
+
+    if args.wcag_only:
+        report = audit_only(source)
+        print(
+            f"{report['source']}: {report['slides']} slides, "
+            f"{report['images_found']} images, {report['tables_detected']} tables"
+        )
+        print_wcag(report)
+        report_path = Path(args.report) if args.report else source.with_suffix(".wcag.json")
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+        print(f"Wrote {report_path}")
+        return 0
 
     output = Path(args.output) if args.output else source.with_suffix(".remediated.pptx")
 
@@ -93,7 +132,8 @@ def main(argv: list[str] | None = None) -> int:
             f"{report['tables_detected']} table(s) detected -- reported, not "
             "remediated (tables need their own accessibility work)"
         )
-    print(f"Wrote {output}")
+    print_wcag(report)
+    print(f"\nWrote {output}")
 
     report_path = Path(args.report) if args.report else output.with_suffix(".json")
     report_path.parent.mkdir(parents=True, exist_ok=True)

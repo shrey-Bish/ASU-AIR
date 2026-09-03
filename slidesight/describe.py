@@ -53,12 +53,20 @@ by the rough endoplasmic reticulum."
 
 STEP 3. Score your confidence in the description you just wrote.
 
+The slide text above is background only. It often repeats values that also
+appear in the image -- and it is sometimes about a different part of the lesson
+entirely. Do not copy a number, label, or subject from the slide text into your
+description unless you can also read it in the image itself.
+
+Before scoring, apply this test: if you had been given this image with no slide
+text at all, would your description still be the same? If any part of it would
+change or disappear, score 3 or below and say which part in "reason".
+
 Confidence measures whether a sighted reader could verify your description
-against the image -- not how sharp the image is. If any value, label, or
-relationship in your description came from the slide text or from your
-assumptions rather than from reading the image itself, score 3 or below and say
-so in "reason". An honest 2 is more useful than a confident guess: low scores
-send the image to a human instead of writing something wrong into the file.
+against the image alone -- not how sharp the image is, and not how well you
+understand the topic. An honest 2 is more useful than a confident guess: low
+scores send the image to a human instead of writing something wrong into the
+file.
 
 5 - every value and label in the description is legible in the image
 4 - clear image, minor ambiguity in labels or units

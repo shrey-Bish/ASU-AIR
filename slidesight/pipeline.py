@@ -15,7 +15,7 @@ from typing import Any, Callable
 from openai import AsyncOpenAI
 from pptx import Presentation
 
-from . import apply, config
+from . import apply, config, wcag
 from .describe import describe_image, summarize_deck
 from .extract import count_tables, deck_text, extract_images
 
@@ -109,4 +109,22 @@ async def remediate(
         "runtime_seconds": round(time.time() - started, 1),
         **counts,
         "images": records,
+        "wcag": wcag.audit(prs),
+    }
+
+
+def audit_only(input_path: str | Path) -> dict[str, Any]:
+    """WCAG checks with no model calls. Runs in milliseconds.
+
+    This is also the graceful-degradation path: if the vision model is
+    unreachable, this alone is still a working accessibility tool.
+    """
+    input_path = Path(input_path)
+    prs = Presentation(str(input_path))
+    return {
+        "source": input_path.name,
+        "slides": len(prs.slides),
+        "images_found": len(extract_images(prs)),
+        "tables_detected": count_tables(prs),
+        "wcag": wcag.audit(prs),
     }
