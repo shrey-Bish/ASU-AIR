@@ -216,25 +216,33 @@ problem"*, *"6. Test the model"*, and *"three types of learning: supervised,
 unsupervised, reinforcement"*. In a machine-learning course **those animals are
 the teaching content**. Silencing them deletes the point of the slide.
 
-So a decorative verdict is no longer trusted on its own. Any image covering more
-than 12% of the slide goes to human review instead of being silenced, with the
-reason stated. Logos and template icons run 1–8% of slide area and are
-unaffected; this reroutes 9% of previously-silenced images.
+So a decorative verdict is no longer trusted on its own. It now has to survive
+**two independent checks**, and failing either sends the image to a human.
 
-**Why 12%, and what it still misses.** The two populations were measured, not
-guessed. Images we confirmed by eye as genuinely decorative — logos, template
-icons, dividers — run **2.0-8.6%** of slide area, with one outlier at 14.1% (a
-full-width stock photo). The AI 101 teaching photos wrongly silenced run
-**10.3-42.7%**. The populations *overlap*, so there is no clean line; 12% is a
-tradeoff placed inside that overlap.
+**Check one: size.** Anything covering more than 12% of the slide. Logos and
+dividers are small; a chart is not. Both populations were measured rather than
+guessed — images confirmed by eye as decorative run 2.0–8.6% of slide area,
+while the wrongly-silenced AI 101 photos run 10.3–42.7%.
 
-The cost is explicit: **it catches 9 of the 12 AI 101 misclassifications, not
-all of them.** A cat photo at 6.7% on a slide reading "2. Find data" is still
-silenced, because no size threshold that catches it would leave the queue
-usable. Size is a proxy for importance and an imperfect one. Repetition was
-tested as a second signal -- decorative icons repeat, content usually does not
--- but it pushes 67 more images into review, most of them genuine one-off
-logos, so it was rejected as a queue flood.
+**Check two: photograph or flat graphic — and this is the better signal.** Size
+alone caught nine of the twelve AI 101 cases and missed three, including a cat
+at 6.7% of the slide. Then a worse example turned up: a **dog photograph at 1%
+of the slide** on a slide reading *"Data Representation – Feature Extraction /
+Raw data: Images → Features"*. That photograph was the raw data being taught —
+the entire point of the slide — and no size threshold that caught it would leave
+the review queue usable.
+
+What does separate them is how an image is built. Logos, icons and dividers are
+a handful of flat colours; photographs are thousands. Measured on images
+verified by eye, decorative art tops out at **843 distinct colours** and
+teaching photographs start at **3,324**. The threshold sits in that gap.
+
+Together the two checks reroute 11% of previously-silenced images — a safety
+net, not a queue flood — and they close the gap: **MIT AI 101 now silences
+nothing at all**, so none of its twelve teaching photographs can be lost.
+Repetition was also tested as a signal (decorative icons repeat, content usually
+does not) but it pushed 67 more images into review, most of them genuine one-off
+logos, so it was rejected.
 
 ### The confidence gate
 
@@ -262,7 +270,8 @@ Every one of these was found by running real material, not by reading code.
 
 | Bug | Effect | Fix |
 |---|---|---|
-| Decorative verdicts were never second-guessed | Teaching photos in an AI course silently deleted from the accessible version | Decorative calls on images >12% of slide area go to review |
+| Decorative verdicts were never second-guessed | Teaching photos in an AI course silently deleted from the accessible version — the most harmful failure available, and invisible by design | A decorative call must now survive two checks: size, **and** photographic-vs-flat-graphic. Either failure sends it to a human. |
+| Size alone was the wrong signal for that guard | A dog photograph at 1% of the slide — the raw input on a feature-extraction slide — was still being silenced | Distinct-colour count: decorative art tops out at 843, teaching photographs start at 3,324 |
 | TIFF and BMP rejected as "unsupported" | 26 images went to review as failures — a queue full of items a human could not act on | Re-encoded via Pillow; only undecodable vector art now goes to review |
 | Replies truncated by the token limit were discarded | 3 good descriptions reported as low-confidence failures | Salvage fields from partial JSON; token cap raised |
 | Model copied values from slide text | Confident invented values on an illegible image | Model reports what it can literally read; mechanical cross-check caps confidence at 3 |

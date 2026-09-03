@@ -40,7 +40,7 @@ on-premise inference are the parts that are ours.
 | Extraction (incl. images nested in groups) | ✅ Done, verified |
 | Vision descriptions via ASU AIR | ✅ Done, verified on 380 images |
 | Confidence gate + review queue | ✅ Done, 17 items on real decks |
-| Decorative detection + silencing | ✅ Done + guarded, catches 9 of 12 (§5) |
+| Decorative detection + silencing | ✅ Done, guarded by two signals (§5) |
 | Write-back into the file | ✅ Done, verified in 3 readers |
 | Accessibility (WCAG) checks — 5 of 6 | ✅ Done, verified |
 | Screen-reader audio preview (before/after) | ✅ Done, working |
@@ -95,11 +95,9 @@ data/        legacy-ppt · demo · pdfs · challenge · design-source
 
 `decks/`, `out/` and `data/` are gitignored. `demo-decks/` is **not** — the two
 demo decks are committed so the team can pull them, and they are ASU course
-material that should come out before the repo is shared widely.
-
-`decks/`, `out/` and `data/` are gitignored — the decks are not ours to
-redistribute. The repo carries code, docs, and `out/eval/eval_summary.json` as
-the evidence behind §5.
+material that should come out before the repo is shared widely. The repo
+otherwise carries code, docs, and `out/eval/eval_summary.json` as the evidence
+behind §5.
 
 ### Decisions that matter
 
@@ -204,15 +202,28 @@ signals, and failing either sends the image to a human instead of silencing it.
   verified by eye, decorative art tops out at **843 distinct colours** while
   teaching photographs start at **3,324**. The threshold sits in that gap.
 
-Together these reroute 30 images. The AI 101 misclassifications are now all
-caught, including the 6.7% cat that the size guard alone missed.
+Together these reroute 30 images, and they close the gap completely: **MIT AI
+101 now silences nothing at all** — every one of its 77 images is either
+described or sent to a human, so none of the twelve teaching photographs can be
+lost. The size guard alone had caught nine of the twelve; the colour signal
+caught the remaining three, including a cat at 6.7% of the slide and another at
+1%.
 
-Working through on MIT AI 101, the deck where the problem was found: decorative
-went **11 → 2** and review **0 → 11**, which is the nine rerouted images plus
-one genuine low-confidence item. Applied moved 66 → 64 between runs; that is
-model non-determinism at temperature 0.2, not the guard. Small decks show this
-more — CSE 551 has six images and one flipped from applied to decorative between
-runs. Worth knowing before quoting any single number to a decimal place.
+**Reading the per-deck table.** All figures below are from the current run, with
+both guards on. For MIT AI 101 — the deck where the problem was found — that is
+**68 applied, 0 decorative, 9 review**. Before either guard existed the same
+deck read 66 applied / 11 decorative / 0 review, so the eleven silenced images
+became nine reviews plus two the model simply described instead. Quote the
+current row; the pre-guard figures are history, not a second measurement.
+
+**Which per-deck numbers are stable.** The two guards are deterministic: on ASU
+intro machine learning, all eleven review items are decorative calls the guard
+intercepted, none are low-confidence, so that deck's 15 → 4 decorative swing is
+entirely the guard. The model itself is not deterministic at temperature 0.2,
+and small decks show it: CSE 450 moved 4 → 2 applied with three images landing
+at confidence 3 instead of 4, and CSE 551 flipped one of its six images between
+runs. **Totals and guard-driven figures are safe to quote; single-image
+movements on ten-image decks are not.**
 
 
 | Deck | Slides | Images | Applied | Decor. | Review | WCAG | Time |
@@ -321,7 +332,8 @@ real material rather than by reading the code.
 
 | Bug | Effect | Fix |
 |---|---|---|
-| **Decorative verdicts were never second-guessed** | **Teaching photos in an AI course silently deleted from the accessible version — the most harmful failure in the system, and invisible by design** | Decorative calls on images >12% of slide area go to review |
+| **Decorative verdicts were never second-guessed** | **Teaching photos in an AI course silently deleted from the accessible version — the most harmful failure in the system, and invisible by design** | A decorative call now fails two independent checks: image over 12% of the slide, **or** photographic rather than flat graphic (distinct-colour count). Either sends it to a human. |
+| Size alone was the wrong signal for that guard | A dog photograph at **1% of the slide** — the raw input on a feature-extraction slide, and the entire point of it — was still being silenced | Colour count separates the populations cleanly: verified decorative art tops out at 843 distinct colours, teaching photographs start at 3,324 |
 | `notes_text_frame` can be `None` when a notes slide exists | Extraction crashed on one MIT deck | Guard for `None` |
 | TIFF and BMP rejected as "unsupported" | 26 images in one deck went to review as failures — **a queue full of things a human could not act on** | Pillow re-encodes them; only undecodable vector art now goes to review |
 | Replies truncated by the token limit were discarded | 3 good descriptions reported as low-confidence failures | Salvage the fields from partial JSON; token cap raised |
