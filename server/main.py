@@ -183,7 +183,7 @@ async def upload(file: UploadFile = File(...)) -> JSONResponse:
 
 
 def _processing_state(job: dict) -> dict:
-    return {
+    state = {
         "job_id": job["job_id"],
         "status": job["status"],
         "progress_pct": job["progress_pct"],
@@ -195,6 +195,9 @@ def _processing_state(job: dict) -> dict:
         "current_action": job["current_action"],
         "records_so_far": job["records_so_far"],
     }
+    if job.get("error"):
+        state["error"] = job["error"]
+    return state
 
 
 @app.get("/api/jobs/{job_id}")
@@ -206,6 +209,11 @@ async def job_state(job_id: str):
     if job["status"] == "complete":
         # Never leak server filesystem paths to the client.
         job.pop("output_path", None)
+        # Sanitize any report output to replace temp paths with just the filename
+        if job.get("report"):
+            report = dict(job["report"])
+            report["output"] = job.get("output_filename") or report.get("output", "")
+            job["report"] = report
         return job
     return _processing_state(job)
 
@@ -235,7 +243,10 @@ async def report(job_id: str):
         return _error(404, f"Unknown job: {job_id}")
     if job["status"] != "complete" or job["report"] is None:
         return _error(404, f"Job {job_id} is {job['status']}; no report yet.")
-    return job["report"]
+    # Never leak server filesystem paths to the client.
+    report = dict(job["report"])
+    report["output"] = job.get("output_filename") or report.get("output", "")
+    return report
 
 
 def _find_image(prs, slide_no: int, image_id: str):

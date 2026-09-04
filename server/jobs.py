@@ -19,7 +19,7 @@ from typing import Any
 _JOB_FIELDS = (
     "job_id",
     "filename",
-    "status",  # "processing" | "complete" | "error"
+    "status",  # "processing" | "complete" | "failed"
     "created_at",
     "progress_pct",
     "total_slides",
@@ -139,7 +139,7 @@ class JobRegistry:
             job = self._jobs.get(job_id)
             if job is None:
                 return False
-            job["status"] = "error"
+            job["status"] = "failed"
             job["error"] = error
             return True
 
