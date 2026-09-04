@@ -1,83 +1,75 @@
 # SlideSight
 
-Accessibility remediation for PowerPoint lecture decks, running entirely on ASU
-Research Computing hardware.
+Writes alt text for the pictures in PowerPoint lecture slides, using models
+hosted on ASU Research Computing.
 
-A blind student opening a lecture deck hears `"Picture 4"` where everyone else
-sees a chart. In one real ASU course deck, what they actually hear is worse — the
-alt text is `C:\Users\symbiosis\Desktop\IB2COM\box_fls.png`, a Windows file
-path read out letter by letter.
+A blind student opening a lecture deck usually hears "Picture 4". In one real ASU
+course deck the alt text is `C:\Users\symbiosis\Desktop\IB2COM\box_fls.png`, so
+what they actually hear is a Windows folder path spelled out.
 
-SlideSight finds every image in a `.pptx`, writes real alt text with a vision
-model running on ASU hardware, and saves it back into the file — but only when
-the model is confident. Everything else goes to a human review queue instead of
-being silently guessed.
+SlideSight finds every picture in a `.pptx`, writes a description for each one,
+and saves the descriptions back into the file. It only saves the ones it is
+confident about. The rest go to a review queue for a person to check.
 
-Built for the ASU AIR Spark Challenge. There is a browser app and a command
-line; both use the same pipeline.
+Built for the ASU AIR Spark Challenge. There is a browser app and a command line
+tool; both run the same code underneath.
 
-## What makes this different
+## What is different about it
 
-Generating alt text for PowerPoint is not new (see [prior art](#prior-art)).
-Two things here are:
+Writing alt text for PowerPoint has been done before (see [prior art](#prior-art)).
+Two things here have not.
 
-1. **A confidence gate.** The model scores its own certainty 1–5 in the same
-   call that produces the description. 4–5 is written to the file; 1–3 is held
-   for a human with the model's stated reason. The tool knows when it does not
-   know.
-2. **On-premise inference.** Lecture decks are unpublished faculty intellectual
-   property, and some carry graded student work. Those cannot go to a commercial
-   API as a matter of policy, not preference. All inference stays on ASU
-   hardware.
+**It knows when it is unsure.** The model rates its own confidence from 1 to 5 in
+the same request that produces the description. Anything at 4 or 5 goes into the
+file. Anything lower is held back, with the model's reason attached, for a person
+to approve or rewrite.
 
-A third behaviour matters more than it sounds: **decorative images get empty alt
-text**, so screen readers skip them. One Stanford deck repeats a briefcase icon
-37 times; without this a student hears "briefcase" thirty-seven times in one
-lecture.
+**Nothing leaves campus.** Lecture slides are unpublished faculty work and some
+carry graded student material, so sending them to a commercial API is a policy
+problem before it is a technical one. Every model call goes to ASU hardware.
 
-And because silencing an image is the more harmful mistake — a wrongly-silenced
-diagram is deleted from the student's experience and never reaches a human —
-that decision is itself guarded. See [the decorative section](#silencing-an-image-is-the-dangerous-decision)
-for how we found our own tool getting it wrong.
+There is a third behaviour that turned out to matter more than we expected.
+Logos and icons get empty alt text so screen readers skip past them. One Stanford
+deck repeats a briefcase icon 37 times; without this a student hears "briefcase"
+37 times in one lecture. Deciding to silence a picture is also the most dangerous
+thing the tool does, and [we caught ourselves getting it
+wrong](#silencing-a-picture-is-the-dangerous-decision).
 
-## Install
+## Setup
 
-Requires Python 3.11+.
+Python 3.11 or newer.
 
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 ```
 
-Put your Research Computing key in `.env` (get one from
-[voyager.rc.asu.edu](https://voyager.rc.asu.edu)):
+Put your Research Computing key in `.env`. You can get one from
+[voyager.rc.asu.edu](https://voyager.rc.asu.edu).
 
 ```
 RC_LLM_API_KEY=your-key-here
 ```
 
-`.env` is gitignored. Never commit a key.
+`.env` is gitignored. Do not commit a key.
 
-## Use
+## Running it
 
-### The web app
+### Browser
 
 ```bash
 .venv/bin/python -m uvicorn server.main:app --port 8000
 ```
 
-Point it at any `.pptx`. The evaluation in [Results](#results) used ten real
-university lecture decks; those are course materials belonging to their authors,
-so they are not redistributed here.
+Open <http://127.0.0.1:8000> and upload a `.pptx`. Four steps: upload, watch the
+descriptions being written, work through the review queue, download the file.
 
-Open <http://127.0.0.1:8000>. Four steps: upload a deck, watch descriptions
-being written, work the review queue, download the result. The review queue is
-the point — those descriptions were deliberately **not** written, and approving
-one is what puts it in the file. Edit the draft first if it is wrong.
+The review queue is the part that matters. Those descriptions were deliberately
+not saved. Approving one is what writes it into the file, and you can edit the
+draft first. Each run gets its own URL (`?job=<id>`), so refreshing the page does
+not lose your work.
 
-A run is addressable: `?job=<id>` reopens it, so refreshing does not lose work.
-
-### The command line
+### Command line
 
 ```bash
 .venv/bin/python -m slidesight lecture.pptx -o out/lecture.remediated.pptx
@@ -87,33 +79,33 @@ A run is addressable: `?job=<id>` reopens it, so refreshing does not lose work.
 Reading lecture.pptx
   slide   8  applied  c5  Two horizontal position axes labeled x(m) from -60 to 60...
   slide  25  decor.   c5  Discord brand logo, no teaching content
-  slide  31  REVIEW   c2  chart axis labels are cut off at the right edge
+  slide  31  REVIEW   c2  the chart's axis labels are cut off at the right edge
 
-23 images on 47 slides  ->  20 applied, 2 decorative, 1 to review   (339.0s)
+23 images on 19 slides  ->  8 applied, 4 decorative, 11 to review   (50.4s)
 Wrote out/lecture.remediated.pptx
 Wrote out/lecture.remediated.json
 ```
 
-| Flag | Meaning |
+| Flag | What it does |
 |---|---|
-| `-o, --output` | where to write the remediated deck |
+| `-o, --output` | where to write the new file |
 | `-r, --report` | where to write the JSON report |
-| `-c, --concurrency` | parallel calls to the gateway (default 4) |
-| `--no-summary` | skip the one-per-deck summary call |
+| `-c, --concurrency` | how many pictures to describe at once (default 4) |
+| `--no-summary` | skip the one-per-file summary call |
 | `--wcag-only` | run the accessibility checks only, no model calls |
-| `--quiet` | only print the final counts |
+| `--quiet` | print the totals and nothing else |
 
-**PowerPoint `.pptx` only.** Legacy `.ppt` is a different binary format that
-`python-pptx` cannot read. Convert it first:
+Only `.pptx` works. The older `.ppt` format is a completely different kind of
+file that `python-pptx` cannot open, so convert it first:
 
 ```bash
 soffice --headless --convert-to pptx "old deck.ppt"
 ```
 
-## Output contract
+## The report
 
-Every image produces one record. This is the interface between the pipeline and
-the UI:
+Every picture produces one record. This is what the browser app reads, and what
+you get from `--report`.
 
 ```json
 {
@@ -127,220 +119,238 @@ the UI:
 }
 ```
 
-`action` is one of `auto_applied`, `review_queue`, or `decorative_empty_alt`.
+`action` is one of:
 
-## Repository layout
+| Value | Meaning |
+|---|---|
+| `auto_applied` | confident enough to write straight into the file |
+| `review_queue` | held back for a person |
+| `decorative_empty_alt` | a logo or icon, given empty alt text so readers skip it |
+| `human_approved` | someone approved or rewrote it in the browser app |
+
+## Layout
 
 ```
-slidesight/        the pipeline -- extract, describe, apply, wcag
-server/            FastAPI app: upload, progress, review, approve, download
-web/               the browser UI (index.html, style.css, app.js)
-scripts/           evaluate.py, make_review_demo.py, screen_reader_preview.py
-fixtures/          sample_report.json -- a report to develop against, no key needed
-out/eval/          the evaluation summary behind the Results table
-
-Not in the repo: test decks and working material stay local. Lecture decks are
-their authors' course materials, not ours to redistribute.
+slidesight/   the pipeline: extract, describe, apply, wcag
+server/       the API: upload, progress, review, approve, download
+web/          the browser app
+scripts/      evaluate.py, make_review_demo.py, screen_reader_preview.py
+fixtures/     a sample report, useful for working on the UI without a key
+out/eval/     the summary behind the numbers below
 ```
 
-See [MODELS.md](MODELS.md) for the exact model IDs and why everything runs on AIR.
+Test decks are not in the repo. They are course materials belonging to the people
+who wrote them.
 
 ## How it works
 
 ```
-.pptx ─> extract ─> describe ─> triage ─> write back ─> .pptx + report.json
-         (recurse    (vision     (conf.    (descr=,
-          groups)     model)      gate)     strip title)
+.pptx -> find pictures -> describe -> decide -> write back -> .pptx + report
 ```
 
-| Module | Responsibility |
+| File | Job |
 |---|---|
-| `extract.py` | Walk every shape, recursing into groups. Pull each image plus its own slide's title, body, and speaker notes. |
-| `describe.py` | One vision call per image returning description, decorative flag, confidence, and reason. |
-| `apply.py` | The confidence gate, and write-back into the OOXML `descr` attribute. |
-| `pipeline.py` | Async orchestration with a bounded semaphore; results stream as they land. |
-| `wcag.py` | Five detection-only accessibility checks. No model calls. |
+| `extract.py` | Walk every shape, including inside groups. Pull each picture plus its own slide's title, body text and speaker notes. |
+| `describe.py` | One model call per picture. Returns a description, a decorative flag, a confidence score and a reason. |
+| `apply.py` | Decides what to do with each result, and writes alt text back into the file. |
+| `pipeline.py` | Runs the calls a few at a time and streams results as they arrive. |
+| `wcag.py` | Five accessibility checks. No model calls. |
 
-Three details that are easy to get wrong, all verified against real decks:
+Three things that are easy to get wrong, all of which bit us:
 
-- **Images hide inside groups.** Iterating `slide.shapes` found 13 pictures in
-  one test deck; recursing into `MSO_SHAPE_TYPE.GROUP` found 15. Missing 13% of
-  the images on the first deck we tried.
-- **Pictures carry a `title` attribute** holding the original filename
-  (`Screenshot 2026-09-02 at 9.25.40 AM.png`). Some screen readers read it
-  aloud. We strip it.
-- **Context is per-slide, not per-deck.** Sending all 45 slides of text with
-  every image dilutes the signal and makes descriptions vaguer. A single
-  200-word deck summary is generated once and prepended instead.
+Pictures hide inside groups. Looping over `slide.shapes` found 13 pictures in
+the first deck we tried; recursing into groups found 15. We were missing 13% of
+them.
+
+Pictures carry a second field holding the original filename, something like
+`Screenshot 2026-09-02 at 9.25.40 AM.png`. Some screen readers read it out. We
+delete it.
+
+Each picture is sent with its own slide's text, not the whole deck's. Sending
+everything makes descriptions vaguer, because slide 32's bullet points are noise
+when you are describing slide 7's chart. A single 200-word summary of the file is
+generated once and included instead.
 
 ## Results
 
-Evaluated on **10 real university lecture decks** — eight ASU course decks
-(CSE 450, CSE 551, CSE 511, two machine-learning units, and **three PHY 111
-physics decks**), MIT's AI 101, and Stanford CS106B.
-**505 slides, 380 images, 556 seconds.**
+Ten real university lecture decks: eight from ASU (CSE 450, CSE 551, CSE 511, two
+machine learning units and three PHY 111 physics decks), plus MIT's AI 101 and
+Stanford's CS106B. 505 slides, 380 pictures, 556 seconds.
 
 | | Count |
 |---|---|
-| Images found | 380 |
-| Alt text applied automatically | 228 |
-| Marked decorative (silenced) | 122 |
-| Sent to human review | 30 |
-| WCAG issues detected (nothing modified) | 531 |
+| Pictures found | 380 |
+| Descriptions written automatically | 228 |
+| Silenced as decorative | 122 |
+| Sent to a person | 30 |
+| Accessibility issues found and reported | 531 |
 
-Confidence spread: 238 at 5, 137 at 4, 4 at 3, 1 at 2. Write-back verified in three
-independent readers — reopened in `python-pptx` with zip integrity intact and
-the source unmodified, opened in **Keynote** with no repair prompt, and
-round-tripped through **LibreOffice Impress with all 23 descriptions preserved
-byte-identical**. **PowerPoint itself has not been tested** — it is not
-installed on the dev machine.
+Confidence came back as 5 for 238 pictures, 4 for 137, 3 for four and 2 for one.
 
-### Silencing an image is the dangerous decision
+We checked the descriptions really do survive being saved. Files reopen in
+`python-pptx` with the zip intact and the original untouched, Keynote opens them
+with no repair prompt, and LibreOffice reads and rewrites them with all 23
+descriptions in one test file preserved byte for byte. PowerPoint itself has not
+been tested, because it was not installed on the machine we built this on.
 
-A bad description gets read by a human and fixed. A wrongly-silenced diagram is
-removed from the blind student's experience entirely — and a confidence gate on
-descriptions does nothing to protect it.
+### Silencing a picture is the dangerous decision
 
-We found this the hard way. Reviewing the images the model called decorative,
-most were exactly right: Stanford CS106B's *fundamentals* deck silenced 66
-images, but those are only **5 unique pictures** — a briefcase icon repeated 37
-times, an arrow 26 times, plus the Stanford seal, the C++ logo and a stock
-photo. Without silencing, a student hears "briefcase" thirty-seven times.
+A bad description gets read by a person and fixed. A wrongly silenced picture
+disappears from the file entirely, and by design nobody ever sees it again. The
+confidence gate protects descriptions. Nothing protected this.
 
-But MIT's AI 101 deck was a different story. Photographs of cats, dogs and a
-crawling baby were called decorative — on slides reading *"1. Define a
-problem"*, *"6. Test the model"*, and *"three types of learning: supervised,
-unsupervised, reinforcement"*. In a machine-learning course **those animals are
-the teaching content**. Silencing them deletes the point of the slide.
+So we went and looked at every picture the tool had silenced.
 
-So a decorative verdict is no longer trusted on its own. It now has to survive
-**two independent checks**, and failing either sends the image to a human.
+Most of it was right. Stanford's CS106B deck silenced 66 pictures, but those are
+only five unique images: a briefcase icon used 37 times, an arrow 26 times, the
+Stanford seal, the C++ logo and a stock photo of string.
 
-**Check one: size.** Anything covering more than 12% of the slide. Logos and
-dividers are small; a chart is not. Both populations were measured rather than
-guessed — images confirmed by eye as decorative run 2.0–8.6% of slide area,
-while the wrongly-silenced AI 101 photos run 10.3–42.7%.
+MIT's AI 101 deck was not right. Photographs of cats, dogs and a crawling baby
+had been marked decorative, on slides that read "1. Define a problem", "6. Test
+the model" and "three types of learning: supervised, unsupervised,
+reinforcement". In a machine learning course those animals are the lesson.
+Silencing them removes the point of the slide.
 
-**Check two: photograph or flat graphic — and this is the better signal.** Size
-alone caught nine of the twelve AI 101 cases and missed three, including a cat
-at 6.7% of the slide. Then a worse example turned up: a **dog photograph at 1%
-of the slide** on a slide reading *"Data Representation – Feature Extraction /
-Raw data: Images → Features"*. That photograph was the raw data being taught —
-the entire point of the slide — and no size threshold that caught it would leave
-the review queue usable.
+A decorative verdict now has to pass two separate checks, and failing either one
+sends the picture to a person.
 
-What does separate them is how an image is built. Logos, icons and dividers are
-a handful of flat colours; photographs are thousands. Measured on images
-verified by eye, decorative art tops out at **843 distinct colours** and
-teaching photographs start at **3,324**. The threshold sits in that gap.
+The first is size. Anything covering more than 12% of the slide gets held back.
+We measured both groups rather than guessing: pictures we confirmed by eye as
+decorative run 2 to 8.6% of the slide, and the AI 101 photographs that should
+never have been silenced run 10.3 to 42.7%.
 
-Together the two checks reroute 11% of previously-silenced images — a safety
-net, not a queue flood — and they close the gap: **MIT AI 101 now silences
-nothing at all**, so none of its twelve teaching photographs can be lost.
-Repetition was also tested as a signal (decorative icons repeat, content usually
-does not) but it pushed 67 more images into review, most of them genuine one-off
-logos, so it was rejected.
+The second check is better, and we only found it because size was not enough.
+Size caught nine of the twelve AI 101 cases. Then a worse example turned up in an
+ASU deck: a dog photograph taking up 1% of a slide headed "Data Representation –
+Feature Extraction, Raw data: Images → Features". That photograph was the raw
+data being taught. No size threshold that caught it would leave the review queue
+usable.
 
-### The confidence gate
+What does separate them is how the picture is built. Logos and icons are a
+handful of flat colours. Photographs are thousands. On the pictures we had
+checked by eye, decorative art topped out at 843 distinct colours and teaching
+photographs started at 3,324, so the line goes in that gap.
 
-30 images reached the review queue — most caught by the decorative guards above,
-the rest by genuinely low confidence:
+Together the two checks move 11% of previously silenced pictures into the review
+queue, which is a safety net rather than a flood. MIT's AI 101 now silences
+nothing at all. We also tried using repetition as a signal, on the theory that
+icons repeat and content does not, but it pushed 67 more pictures into review and
+most of them were ordinary one-off logos, so we dropped it.
 
-> "The image is extremely blurry and cropped, showing only a portion of what
-> appears to be the digit…"
+### Does the confidence gate actually fire?
 
-> "The description infers context from the lecture topic and slide text rather
-> than reading it in the image."
+Thirty pictures reached the review queue. Most came from the two decorative
+checks; the rest were genuinely low confidence, with reasons like:
 
-The gate was calibrated rather than assumed. Degrading a known image moves
-confidence the right way — Gaussian blur r=6 → 3, r=14 → 2, both landing in
-review — so a low rate reflects clean source decks, not a dead gate.
-`scripts/make_review_demo.py` reproduces this on demand.
+> The image is extremely blurry and cropped, showing only a portion of what
+> appears to be the digit…
 
-On the threshold: the model returns 5 for 238 images and 4 for 137. Auto-applying
-4-and-above is a deliberate choice; requiring 5 would route another 137 images
-(36% of the corpus) to a human, which is more than a reviewer can absorb.
+> The description infers context from the lecture topic and slide text rather
+> than reading it in the image.
 
-### Bugs found by running real decks
+We tested the gate rather than assuming it worked. Blurring a picture we knew the
+tool handled well moves the score the right way: a Gaussian blur of radius 6
+drops it to 3, radius 14 drops it to 2, and both land in the review queue.
+`scripts/make_review_demo.py` reproduces that on any file.
 
-Every one of these was found by running real material, not by reading code.
+On where the line sits: the model answers 5 for 238 pictures and 4 for 137.
+Writing 4s straight into the file is a deliberate choice. Requiring a 5 would
+send another 137 pictures, 36% of everything, to a person, which is more than
+anyone would work through.
 
-| Bug | Effect | Fix |
+### Bugs we found by running real files
+
+None of these came from reading the code.
+
+| Bug | What it did | Fix |
 |---|---|---|
-| Decorative verdicts were never second-guessed | Teaching photos in an AI course silently deleted from the accessible version — the most harmful failure available, and invisible by design | A decorative call must now survive two checks: size, **and** photographic-vs-flat-graphic. Either failure sends it to a human. |
-| Size alone was the wrong signal for that guard | A dog photograph at 1% of the slide — the raw input on a feature-extraction slide — was still being silenced | Distinct-colour count: decorative art tops out at 843, teaching photographs start at 3,324 |
-| TIFF and BMP rejected as "unsupported" | 26 images went to review as failures — a queue full of items a human could not act on | Re-encoded via Pillow; only undecodable vector art now goes to review |
-| Replies truncated by the token limit were discarded | 3 good descriptions reported as low-confidence failures | Salvage fields from partial JSON; token cap raised |
-| Model copied values from slide text | Confident invented values on an illegible image | Model reports what it can literally read; mechanical cross-check caps confidence at 3 |
-| Decorative decided *after* describing | 1 of 15 images silenced; 5 logos described at confidence 5 | Decide decorative first — 8 of 15 silenced, runtime halved |
-| `notes_text_frame` can be `None` | Extraction crashed on one deck | Guard for `None` |
-| PDFs and mislabelled files | Raw `python-pptx` traceback | Plain-English errors; four cases tested |
+| Nothing ever double-checked a decorative verdict | Teaching photographs in an AI course were being deleted from the accessible version, invisibly | Two checks now, size and photograph-vs-graphic. Failing either sends it to a person. |
+| Size alone was the wrong signal | A dog photograph at 1% of a slide, the raw data on a feature-extraction slide, was still silenced | Count distinct colours: decorative art tops out at 843, photographs start at 3,324 |
+| TIFF and BMP were rejected as unsupported | 26 pictures went to the review queue as failures, which a person could do nothing about | Re-encode them first; only genuinely unreadable vector art goes to review now |
+| Long replies were cut off by the token limit and thrown away | Three good descriptions were reported as failures | Salvage the fields from a partial reply; raise the limit |
+| The model copied numbers out of the slide text | Confident, invented values on a picture it could not read | It now reports what it can actually read, and a check caps confidence when the two disagree |
+| Decorative was decided after describing | Only 1 of 15 pictures silenced, and five logos described at full confidence | Decide decorative first. 8 of 15 silenced, and it ran twice as fast. |
+| A slide with an empty notes page crashed extraction | One deck would not process at all | Guard for the empty case |
+| PDFs and mislabelled files | A raw Python traceback | Plain error messages, four cases covered |
 
-### Still not proven
+### What we have not proved
 
-- **No screen reader has been run end to end.** The XML is right and three
-  readers preserve it, but nobody has heard VoiceOver or NVDA read a remediated
-  deck. To hear the difference yourself, run
-  `scripts/screen_reader_preview.py original.pptx remediated.pptx --slide N`,
-  which speaks both through the macOS voice, then confirm with VoiceOver (⌘F5).
-- **The model can still be fooled.** An illegible image paired with *matching*
-  slide text can carry a wrong description past the gate. Mitigated, not
-  eliminated.
-- **Coverage is short of the plan** — 10 decks across two departments (five
-  computer science, three physics, two general ML). Our own target was 20–30 from
-  five or more departments. A deliberate trade: ten decks with a false-positive
-  analysis beats twenty without one.
+No screen reader has been run against a finished file. The XML is correct and
+three different readers preserve it, but nobody has actually listened to
+VoiceOver or NVDA read one. To hear it for yourself:
 
-## Accessibility report
+```bash
+.venv/bin/python scripts/screen_reader_preview.py original.pptx remediated.pptx --slide 13
+```
 
-Alongside alt text, SlideSight detects five issues it deliberately does **not**
-fix. Alt text is additive — filling an empty field breaks nothing. Changing a
-professor's colours or type sizes hands back a deck they do not recognise. So
-these are reported with slide numbers for a human to decide:
+That speaks both versions through the macOS voice. It is not proof, since it
+reads the file the same way we wrote it, so confirm with VoiceOver (⌘F5).
+
+The model can still be fooled. An unreadable picture next to slide text that
+happens to match can carry a wrong description past the gate. Better than it was,
+but not solved.
+
+Coverage is thinner than we wanted: ten decks across two departments. We were
+aiming for 20 to 30 across five. We chose to spend the time on the
+false-positive analysis instead, and think ten decks with that work behind them
+is worth more than twenty without it.
+
+## Accessibility checks
+
+Alongside the alt text, SlideSight looks for five other problems and
+deliberately does not fix any of them. Adding alt text to an empty field breaks
+nothing. Changing someone's colours or type sizes hands back a file they do not
+recognise. So these are reported with slide numbers, and the decision stays with
+the author.
 
 | Check | What it finds |
 |---|---|
-| `missing_title` | Slides with no title placeholder, or an empty one. Screen readers navigate by title, and a text box that merely *looks* like a title does not count. |
-| `small_text` | Body text under 18pt, resolved against the layout placeholder when the run inherits its size. |
-| `table_no_header` | Tables with no header row, leaving a screen reader no column context. |
-| `vague_link` | "click here", "read more" — screen reader users navigate by link list. |
-| `reading_order` | Shapes are announced in XML order, not visual order. A deck can look right and read out backwards. |
+| Missing titles | Slides with no title box, or an empty one. People move between slides by title, and a text box that merely looks like a title does not count. |
+| Small text | Body text under 18pt. |
+| Tables with no header row | Without one, a screen reader cannot say which column a number belongs to. |
+| Vague links | "click here", "read more". People often browse a list of just the links. |
+| Reading order | Boxes are read in the order they were added, not the order they appear. A slide can look right and still be read out backwards. |
 
-Run them alone, with no API key and no network:
+Run them on their own, with no key and no network:
 
 ```bash
 .venv/bin/python -m slidesight lecture.pptx --wcag-only
 ```
 
-This is also the graceful-degradation path: if the gateway is unreachable, this
-alone is still a working accessibility tool.
+That is also the fallback if the gateway is down. It is still a useful
+accessibility tool with no model behind it.
 
-**Contrast is not implemented.** PowerPoint colours are usually theme references
-with tint maths, and text over a photograph has no computable ratio. It was
-first on the cut list and it got cut.
+Colour contrast is not implemented. PowerPoint colours are usually theme
+references with tint calculations applied, and text sitting on a photograph has
+no computable ratio at all. It was first on the list of things to cut, and it got
+cut.
 
 ## Limitations
 
-- PowerPoint only. PDF remediation needs tag trees and reading order — a much
-  larger problem, and ASU's CIC has already built a funded version.
-- Tables are detected and reported, never remediated. They have their own
-  accessibility requirements.
-- Vector images (EMF/WMF) cannot be read by the vision model. They are routed to
-  the review queue rather than guessed at.
-- Images are downscaled to 1280px before encoding. Very fine print in a
-  high-resolution screenshot may be lost.
+PowerPoint only. PDF needs tag trees and reading order, which is a much bigger
+problem, and ASU's Cloud Innovation Center has already built a funded tool for it.
+
+Tables are found and reported but never changed. They have their own
+accessibility requirements.
+
+Vector images (EMF and WMF) cannot be read by the model, so they go to the review
+queue rather than being guessed at.
+
+Pictures are shrunk to 1280px before being sent. Very fine print in a
+high-resolution screenshot can be lost.
 
 ## Prior art
 
 - [`waltervanheuven/auto-alt-text`](https://github.com/waltervanheuven/auto-alt-text)
-  — generates pptx alt text with a VLM and produces a report. The closest
-  existing work. No confidence gate, no review queue.
+  writes pptx alt text with a vision model and produces a report. The closest
+  existing work. No confidence gate and no review queue.
 - [`ASUCICREPO/PDF_Accessibility`](https://github.com/ASUCICREPO/PDF_Accessibility)
-  — ASU AI Cloud Innovation Center's PDF remediation tool, built with Ohio State
-  Libraries. Source of the ~$3–4/page manual remediation cost figure.
+  is ASU's Cloud Innovation Center PDF tool, built with Ohio State Libraries.
+  Where the $3–4 per page manual remediation figure comes from.
 - [`Width-ai/powerpoint-generative-ai`](https://github.com/Width-ai/powerpoint-generative-ai)
-  — includes a `create_alt_text_for_powerpoint` method.
+  has a `create_alt_text_for_powerpoint` method worth reading.
 
 ## Models
 
-See [MODELS.md](MODELS.md) for exact model IDs and why each is used.
+[MODELS.md](MODELS.md) lists the exact model IDs, and explains why everything
+runs on ASU hardware.

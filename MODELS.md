@@ -1,52 +1,64 @@
-# MODELS.md
+# Models
 
-Every model call in SlideSight goes to the ASU Research Computing LLM gateway.
-No OpenAI, no Anthropic, no external inference anywhere in the shipped product.
+Every model call, in the product and in the tools we used to build it, goes to
+the ASU Research Computing gateway. No OpenAI, no Anthropic, nothing off campus.
 
 **Endpoint:** `https://openai.rc.asu.edu/v1` (OpenAI-compatible)
-**Auth:** `Authorization: Bearer $RC_LLM_API_KEY`, loaded from `.env`
-**Keys:** issued per person from [voyager.rc.asu.edu](https://voyager.rc.asu.edu). Never committed.
+**Auth:** `Authorization: Bearer $RC_LLM_API_KEY`, read from `.env`
+**Keys:** one per person from [voyager.rc.asu.edu](https://voyager.rc.asu.edu),
+never committed
 
-## Models in use
+All IDs below were read from the gateway's own `/v1/models` listing on
+3 September 2026, not guessed.
 
-| Role | Model ID | Calls per deck | Why this one |
-|---|---|---|---|
-| Image description | `qwen3-vl-32b-instruct` | one per image | The vision-capable option on AIR. Takes base64 data URLs. Returns description, decorative flag, confidence, and reason in a single call. |
-| Deck summary | `gemma4-31b-it` | one per deck | Text-only, cheap, gives each image prompt background context about the deck's subject and level. |
+## In the product
 
-Both IDs were read from the gateway's own `/v1/models` listing, not guessed.
+Two models do the work. That is the whole list.
 
-## Verified on the gateway
+| ID | Role | Calls |
+|---|---|---|
+| `qwen3-vl-32b-instruct` | Describes each picture | one per picture |
+| `gemma4-31b-it` | Summarises the file once, to give each picture some background | one per file |
 
-Checked 2026-09-03 against `GET /v1/models` and live calls:
+Both are set in [`slidesight/config.py`](slidesight/config.py) as `MODEL_VISION`
+and `MODEL_TEXT`.
 
-- `qwen3-vl-32b-instruct` — accepts `image_url` content parts with
-  `data:image/jpeg;base64,...`. Confirmed end to end on a real lecture slide:
-  790 prompt tokens, 222 completion tokens, valid JSON returned.
-- `gemma4-31b-it` — text only, used only for the deck summary. It is **not**
-  used to critique image descriptions; a text-only model cannot see the image
-  and so cannot catch a hallucinated value.
+`qwen3-vl-32b-instruct` is the vision-capable option on the gateway. It takes
+base64 data URLs and returns the description, a decorative flag, a confidence
+score and a reason in a single reply. Confirmed working end to end on a real
+lecture slide: 790 prompt tokens, 222 completion tokens, valid JSON back.
 
-## Notes for anyone re-running this
+`gemma4-31b-it` is text only, and is used only for the per-file summary. It is
+deliberately **not** used to check the picture descriptions. A model that cannot
+see the picture cannot catch a made-up number in a description of it.
 
-- The gateway exposes 48 models. Of the ones we probed for tool calling, 13
-  return real `tool_calls`; `muse-glimmer-30b` supports tools but often declines
-  under `tool_choice:"auto"`.
-- `minimax-m3` is listed but **broken server-side** — it returns HTTP 400,
-  `model minimax-m3-mxfp4 does not exist`. Avoid it.
-- Concurrency is capped with a semaphore (default 4). Firing every image at once
-  gets rate-limited.
+Requests are capped at 60 seconds with two retries, and no more than four run at
+once. The SDK default is 600 seconds with two retries, which turns one stalled
+request into a half-hour hang.
 
-## The coding assistant ran on AIR too
+## In the coding assistant
 
-The rule is that AIR-hosted models must run the product. They also built it.
+We wrote this project with [OpenCode](https://opencode.ai), an open-source AI
+coding assistant, pointed at the same gateway instead of a commercial API. The
+rule is that AIR models have to run the product. They also built it.
 
-We wrote this project with **OpenCode**, an open-source AI coding assistant,
-configured against this same gateway instead of a commercial API — chat backed
-by `devstral2-123b`, declared as a custom provider:
+Default: **`devstral2-123b`**.
+
+Configured and available in the model picker, all on AIR:
+
+| | | |
+|---|---|---|
+| `devstral2-123b` | `glm-5-3` | `glm-5-3-flash` |
+| `kimi-k2-7-code` | `north-mini-code` | `qwen3-coder-next` |
+| `qwen3-coder-30b-a3b-instruct` | `qwen35-122b-a10b` | `qwen-agentworld-35b-a3b` |
+| `gpt-oss-120b` | `minimax-m2-7` | `laguna-s-2-1` |
+| `muse-glimmer-30b` | | |
+
+The config lives at `~/.config/opencode/opencode.json`:
 
 ```json
 {
+  "$schema": "https://opencode.ai/config.json",
   "provider": {
     "asu": {
       "npm": "@ai-sdk/openai-compatible",
@@ -56,17 +68,42 @@ by `devstral2-123b`, declared as a custom provider:
         "apiKey": "{env:OPENAI_API_KEY}"
       }
     }
-  }
+  },
+  "model": "asu/devstral2-123b"
 }
 ```
 
-Not one line of this repository was written through a commercial model.
+## What we learned probing the gateway
 
-## Why AIR and not a commercial API
+The gateway exposes **48 models**. A coding assistant needs one that can make
+real tool calls, so we sent all the plausible candidates an actual tool-call
+request rather than trusting a badge. Thirteen answered with a real `tool_calls`
+response; those are the thirteen above.
 
-- Lecture decks are unpublished faculty intellectual property. Sending them to a
-  commercial vendor is a policy problem before it is a technical one.
-- A deck carrying graded student work cannot leave campus at all.
-- Volume: hundreds of images per deck across thousands of decks. That is a real
-  bill anywhere else.
-- AIR keeps all inference on ASU hardware and does not train on the data.
+Two things worth knowing if you do the same:
+
+`muse-glimmer-30b` looked like it had no tool support, because it answered a
+weakly-phrased question in prose instead of calling the tool. Asking again with
+`tool_choice: "required"` produced a proper tool call. It supports tools; it just
+declines easily.
+
+`minimax-m3` is listed on the gateway but broken behind it. Every request returns
+HTTP 400 with `model minimax-m3-mxfp4 does not exist`. Do not build anything on
+it.
+
+The gateway itself is not always up. On the evening of 3 September the vision
+model returned `503 overloaded_error` for several minutes and every request
+failed. That is why the pipeline now treats "no model answered for any picture"
+as a failure instead of quietly reporting a finished run with nothing written.
+
+## Why on-campus and not a commercial API
+
+Lecture slides are unpublished faculty work. Sending them to an outside vendor is
+a policy question before it is a technical one.
+
+Some decks carry graded student work, which cannot leave campus at all.
+
+The volume is real. Hundreds of pictures per file, across thousands of files.
+That is a bill anywhere else.
+
+AIR keeps everything on ASU hardware and does not train on what passes through.
