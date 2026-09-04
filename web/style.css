@@ -118,7 +118,7 @@ h3.sec-h { margin: 40px 0 6px; font-family: var(--serif); font-size: 24px; font-
 .review-list { list-style: none; margin: 0; padding: 0; }
 .review-list > li { border-bottom: 1px solid var(--rule); padding: 26px 0; }
 .review-grid { display: grid; grid-template-columns: 148px 1fr; gap: 24px; align-items: start; }
-.thumb { width: 148px; height: 104px; background: #E7E3D9; border: 1px solid #C9C2B2; display: flex; align-items: center; justify-content: center; text-align: center; padding: 4px; overflow: hidden; }
+button.thumb { width: 148px; height: 104px; background: #E7E3D9; border: 1px solid #C9C2B2; display: flex; align-items: center; justify-content: center; text-align: center; padding: 4px; overflow: hidden; }
 .thumb img { max-width: 100%; max-height: 100%; object-fit: contain; }
 .thumb .ph { font-family: var(--mono); font-size: 12px; color: var(--muted); line-height: 1.3; }
 .thumb-cap { margin: 8px 0 0; font-family: var(--mono); font-size: 13px; color: var(--muted); }
@@ -224,3 +224,37 @@ li.handled { opacity: 0.62; }
   .count-list .ln { grid-column: 2; }
   .head-org { margin-left: 0; }
 }
+
+/* ── picture preview ────────────────────────────────── */
+/* A display value in a class beats the browser's own [hidden] rule, so the
+   hidden attribute silently stopped working and this sat open on every load.
+   The [hidden] rule below has to come after, and has to be explicit. */
+.preview[hidden] { display: none !important; }
+.preview {
+  position: fixed; inset: 0; z-index: 50; display: flex;
+  align-items: center; justify-content: center; padding: 32px;
+  background: rgba(28, 26, 23, 0.82);
+}
+.preview-box {
+  position: relative; background: var(--white); border: 1px solid var(--rule);
+  padding: 18px; max-width: min(92vw, 1200px); max-height: 90vh;
+  /* Never collapse to a stub if the image is missing or still loading. */
+  min-width: min(340px, 80vw); min-height: 120px;
+  display: flex; flex-direction: column; gap: 10px;
+  align-items: center; justify-content: center;
+}
+.preview-box img {
+  max-width: 100%; max-height: calc(90vh - 90px); object-fit: contain;
+  background: #F1EEE7;
+}
+.preview-cap { margin: 0; font-size: 15px; color: var(--ink-2); text-wrap: pretty; }
+.preview-close {
+  position: absolute; top: -14px; right: -14px; width: 34px; height: 34px;
+  border-radius: 50%; border: 1px solid var(--maroon); background: var(--maroon);
+  color: #fff; font-size: 20px; line-height: 1; cursor: pointer;
+}
+.preview-close:hover { background: var(--maroon-dark); }
+/* Anything clickable to enlarge */
+.zoom { cursor: zoom-in; display: block; line-height: 0; background: none;
+        border: 0; padding: 0; }
+.zoom:hover { outline: 2px solid var(--maroon); outline-offset: 2px; }

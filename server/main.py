@@ -301,7 +301,7 @@ def _find_image(prs, slide_no: int, image_id: str):
 
 
 @app.get("/api/jobs/{job_id}/thumb/{slide_no}/{image_id}")
-def thumbnail(job_id: str, slide_no: int, image_id: str):
+def thumbnail(job_id: str, slide_no: int, image_id: str, w: int = 480):
     """The actual picture bytes, so the review queue can show what it is asking about.
 
     A reviewer cannot judge a description without seeing the image. Served from
@@ -325,7 +325,10 @@ def thumbnail(job_id: str, slide_no: int, image_id: str):
     from slidesight.describe import prepare_image
 
     blob, content_type = found
-    prepared = prepare_image(blob, content_type, max_edge=480)
+    # The review list needs a small tile; the preview overlay needs something a
+    # person can actually read a chart from. Same picture, two sizes.
+    max_edge = max(120, min(int(w), 1600))
+    prepared = prepare_image(blob, content_type, max_edge=max_edge)
     if prepared is None:
         return _error(415, "This image format cannot be displayed.")
     blob, content_type = prepared
@@ -415,6 +418,21 @@ async def approve(job_id: str, payload: dict = Body(...)):
 
     logger.info("job %s: approved %s on slide %s", job_id, image_id, slide_no)
     return {"status": "written", "slide": slide_no, "image_id": image_id}
+
+
+@app.middleware("http")
+async def revalidate_web_assets(request, call_next):
+    """Make the browser check for a new app.js instead of reusing a stale one.
+
+    StaticFiles sends an ETag but no Cache-Control, so a browser is free to
+    serve the previous copy from its heuristic cache. During a demo that means
+    editing the UI appears to do nothing. no-cache still allows a 304, so this
+    costs a round trip, not a download.
+    """
+    response = await call_next(request)
+    if not request.url.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
 
 
 # The web UI is served from this same app, so one command runs everything.

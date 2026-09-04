@@ -34,6 +34,65 @@ const keyOf = (r) => `${r.slide}:${r.image_id}`;
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
+/* ── picture preview ────────────────────────────────── */
+
+/* Thumbnails are too small to judge a description against, so any picture can
+   be opened full size. Focus moves into the dialog and back to whatever opened
+   it, and Escape closes -- this is an accessibility tool, it has to be usable
+   from the keyboard. */
+let previewOpener = null;
+
+function openPreview(src, caption, alt) {
+  previewOpener = document.activeElement;
+  const img = $("preview-img");
+  const cap = $("preview-cap");
+
+  // Say something while it loads, and say something useful if it never
+  // arrives. An empty white box tells the user nothing.
+  cap.textContent = "Loading the picture…";
+  img.hidden = true;
+  img.alt = alt || caption || "";
+  img.onload = () => { img.hidden = false; cap.textContent = caption || ""; };
+  img.onerror = () => {
+    img.hidden = true;
+    cap.textContent =
+      "That picture could not be loaded. If the server restarted, the run is "
+      + "gone — upload the file again.";
+  };
+  img.src = src;
+
+  $("preview").hidden = false;
+  $("preview-close").focus();
+}
+
+function closePreview() {
+  $("preview").hidden = true;
+  const img = $("preview-img");
+  img.onload = img.onerror = null;
+  img.removeAttribute("src");
+  if (previewOpener && previewOpener.isConnected) previewOpener.focus();
+  previewOpener = null;
+}
+
+function wirePreview() {
+  $("preview-close").addEventListener("click", closePreview);
+  $("preview").addEventListener("click", (e) => {
+    if (e.target === $("preview")) closePreview();   // click the backdrop
+  });
+  document.addEventListener("keydown", (e) => {
+    if ($("preview").hidden) return;
+    if (e.key === "Escape") closePreview();
+    if (e.key === "Tab") { e.preventDefault(); $("preview-close").focus(); }
+  });
+  // One listener for every zoomable picture, now and in future renders.
+  document.addEventListener("click", (e) => {
+    const z = e.target.closest("[data-zoom]");
+    if (!z) return;
+    e.preventDefault();
+    openPreview(z.dataset.zoom, z.dataset.caption || "", z.dataset.alt || "");
+  });
+}
+
 /* ── navigation ─────────────────────────────────────── */
 
 function reachable(key) {
@@ -43,7 +102,12 @@ function reachable(key) {
   return false;
 }
 
-function show(key) {
+function show(key, updateHash = true) {
+  // Steps are deep-linkable: /#review, /#results. Useful for jumping straight
+  // to a screen when demoing, and for sharing a run at a particular step.
+  if (updateHash && location.hash.slice(1) !== key) {
+    history.replaceState(null, "", `${location.search}#${key}`);
+  }
   // Results must be rendered before it is shown: the nav enables that step as
   // soon as the job completes, so a presenter can jump straight to it.
   if (key === "results" && state.report) renderResults();
@@ -231,11 +295,16 @@ function renderReview() {
     <li class="${st ? "handled" : ""}" data-key="${esc(k)}">
       <div class="review-grid">
         <div>
-          <div class="thumb">
-            <img src="/api/jobs/${state.jobId}/thumb/${r.slide}/${encodeURIComponent(r.image_id)}"
-                 alt="Image being reviewed, slide ${r.slide}"
+                    <button type="button" class="thumb zoom"
+            data-zoom="/api/jobs/${state.jobId}/thumb/${r.slide}/${encodeURIComponent(r.image_id)}?w=1400"
+            data-caption="Slide ${r.slide} — click outside or press Escape to close"
+            data-alt="The picture from slide ${r.slide}, shown full size"
+            title="Click to see this picture full size">
+            <img loading="lazy"
+                 src="/api/jobs/${state.jobId}/thumb/${r.slide}/${encodeURIComponent(r.image_id)}"
+                 alt="Picture from slide ${r.slide}"
                  onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'ph',textContent:'no preview'}))">
-          </div>
+          </button>
           <p class="thumb-cap">Slide ${r.slide} &middot; ${esc(r.image_id)}</p>
         </div>
         <div>
@@ -409,9 +478,15 @@ function renderResults() {
       const text = r.alt_text
         || (hidden ? "Hidden on purpose — a screen reader skips it." : "Nothing written yet.");
       return `<li data-row="${esc(k)}">
-        <img class="lp" loading="lazy" alt=""
-             src="/api/jobs/${state.jobId}/thumb/${r.slide}/${encodeURIComponent(r.image_id)}"
-             onerror="this.remove()">
+        <button type="button" class="zoom"
+          data-zoom="/api/jobs/${state.jobId}/thumb/${r.slide}/${encodeURIComponent(r.image_id)}?w=1400"
+          data-caption="Slide ${r.slide}"
+          data-alt="The picture from slide ${r.slide}, shown full size"
+          title="Click to see this picture full size">
+          <img class="lp" loading="lazy" alt="Picture from slide ${r.slide}"
+               src="/api/jobs/${state.jobId}/thumb/${r.slide}/${encodeURIComponent(r.image_id)}"
+               onerror="this.closest('.zoom').remove()">
+        </button>
         <span class="ln">Slide ${r.slide}${mine ? '<span class="you">✓ you</span>' : ""}</span>
         <span class="lt">
           <span class="lt-text">${esc(text)}</span>
@@ -537,12 +612,15 @@ function renderResults() {
     const items = (byCheck[check] || []).slice().sort((a, b) => a.slide - b.slide);
     const lines = items.map((i) =>
       `<li>
-        <a class="slidepic" href="/api/jobs/${state.jobId}/slide/${i.slide}" target="_blank"
-           title="Open slide ${i.slide} full size">
+        <button type="button" class="slidepic zoom"
+          data-zoom="/api/jobs/${state.jobId}/slide/${i.slide}"
+          data-caption="Slide ${i.slide}"
+          data-alt="Slide ${i.slide}, shown full size"
+          title="Click to see slide ${i.slide} full size">
           <img loading="lazy" alt="Slide ${i.slide}"
                src="/api/jobs/${state.jobId}/slide/${i.slide}"
                onerror="this.closest('.slidepic').remove()">
-        </a>
+        </button>
         <span class="ln">Slide ${i.slide}</span>
         <span class="lt">${esc(plainDetail(check, i.detail))}</span>
       </li>`
@@ -627,7 +705,9 @@ async function resumeFromUrl() {
       state.report = job.report;
       buildReview();
       renderResults();
-      show(state.reviewItems.length ? "review" : "results");
+      const wanted = location.hash.slice(1);
+      show(SCREENS.some((s) => s.key === wanted) ? wanted
+           : state.reviewItems.length ? "review" : "results");
     } else {
       resetProgress();
       show("processing");
@@ -645,5 +725,6 @@ async function resumeFromUrl() {
 
 wireUpload();
 wireResults();
+wirePreview();
 renderSteps();
 resumeFromUrl().then((resumed) => { if (!resumed) show("upload"); });

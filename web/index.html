@@ -121,6 +121,15 @@
 
 </main>
 
+<!-- Preview overlay. Hidden until a picture is clicked. -->
+<div id="preview" class="preview" hidden role="dialog" aria-modal="true" aria-labelledby="preview-cap">
+  <div class="preview-box">
+    <button type="button" id="preview-close" class="preview-close" aria-label="Close preview">&times;</button>
+    <img id="preview-img" alt="">
+    <p id="preview-cap" class="preview-cap"></p>
+  </div>
+</div>
+
 <script src="./app.js"></script>
 </body>
 </html>
