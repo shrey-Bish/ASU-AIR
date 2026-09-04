@@ -73,6 +73,20 @@ The config lives at `~/.config/opencode/opencode.json`:
 }
 ```
 
+## In the pitch materials
+
+The illustrations in our pitch deck were generated with **`flux-2`** on the same
+gateway, through `POST /v1/images/generations`. Prompts and outputs are ours; no
+stock library and no commercial image model.
+
+```python
+{"model": "flux-2", "prompt": "...", "n": 1, "size": "1024x1024"}
+# returns b64_json
+```
+
+So every model call attached to this project — describing pictures, summarising
+decks, writing the code, drawing the illustrations — went to ASU hardware.
+
 ## What we learned probing the gateway
 
 The gateway exposes **48 models**. A coding assistant needs one that can make
