@@ -37,6 +37,31 @@ Checked 2026-09-03 against `GET /v1/models` and live calls:
 - Concurrency is capped with a semaphore (default 4). Firing every image at once
   gets rate-limited.
 
+## The coding assistant ran on AIR too
+
+The rule is that AIR-hosted models must run the product. They also built it.
+
+We wrote this project with **OpenCode**, an open-source AI coding assistant,
+configured against this same gateway instead of a commercial API — chat backed
+by `devstral2-123b`, declared as a custom provider:
+
+```json
+{
+  "provider": {
+    "asu": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "ASU Air",
+      "options": {
+        "baseURL": "https://openai.rc.asu.edu/v1",
+        "apiKey": "{env:OPENAI_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+Not one line of this repository was written through a commercial model.
+
 ## Why AIR and not a commercial API
 
 - Lecture decks are unpublished faculty intellectual property. Sending them to a

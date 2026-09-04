@@ -66,6 +66,10 @@ RC_LLM_API_KEY=your-key-here
 .venv/bin/python -m uvicorn server.main:app --port 8000
 ```
 
+Point it at any `.pptx`. The evaluation in [Results](#results) used ten real
+university lecture decks; those are course materials belonging to their authors,
+so they are not redistributed here.
+
 Open <http://127.0.0.1:8000>. Four steps: upload a deck, watch descriptions
 being written, work the review queue, download the result. The review queue is
 the point — those descriptions were deliberately **not** written, and approving
@@ -128,25 +132,18 @@ the UI:
 ## Repository layout
 
 ```
-slidesight/        the package -- extract, describe, apply, wcag, pipeline, cli
+slidesight/        the pipeline -- extract, describe, apply, wcag
 server/            FastAPI app: upload, progress, review, approve, download
 web/               the browser UI (index.html, style.css, app.js)
 scripts/           evaluate.py, make_review_demo.py, screen_reader_preview.py
 fixtures/          sample_report.json -- a report to develop against, no key needed
-decks/             the 10 test decks (gitignored, not ours to redistribute)
-out/               generated decks, reports, audio (gitignored)
-data/              working material (gitignored)
-  legacy-ppt/        original .ppt files before conversion
-  demo/              the deliberately-degraded demo deck
-  pdfs/              PDFs, out of scope -- kept to test rejection
-  challenge/         Spark Challenge kickoff deck and workshop material
-  design-source.dc.html   the approved design the web UI was built from
+out/eval/          the evaluation summary behind the Results table
+
+Not in the repo: test decks and working material stay local. Lecture decks are
+their authors' course materials, not ours to redistribute.
 ```
 
-Docs: [STATUS.md](STATUS.md) full build review, evidence and known limits ·
-[MODELS.md](MODELS.md) exact model IDs and why AIR ·
-[DEMO.md](DEMO.md) pitch script and what not to claim ·
-[NEXT_STEPS.md](NEXT_STEPS.md) hosting, the test checklist, and which decks to demo.
+See [MODELS.md](MODELS.md) for the exact model IDs and why everything runs on AIR.
 
 ## How it works
 
@@ -283,12 +280,14 @@ Every one of these was found by running real material, not by reading code.
 
 - **No screen reader has been run end to end.** The XML is right and three
   readers preserve it, but nobody has heard VoiceOver or NVDA read a remediated
-  deck. Steps are in [DEMO.md](DEMO.md).
+  deck. To hear the difference yourself, run
+  `scripts/screen_reader_preview.py original.pptx remediated.pptx --slide N`,
+  which speaks both through the macOS voice, then confirm with VoiceOver (⌘F5).
 - **The model can still be fooled.** An illegible image paired with *matching*
   slide text can carry a wrong description past the gate. Mitigated, not
   eliminated.
 - **Coverage is short of the plan** — 10 decks across two departments (five
-  computer science, three physics, two general ML). PLAN.md asks for 20–30 from
+  computer science, three physics, two general ML). Our own target was 20–30 from
   five or more departments. A deliberate trade: ten decks with a false-positive
   analysis beats twenty without one.
 

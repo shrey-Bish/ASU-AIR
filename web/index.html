@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SlideSight — lecture deck image descriptions</title>
+<title>SlideSight — picture descriptions for lecture slides</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -16,7 +16,7 @@
 <header>
   <div class="head-inner">
     <h1>SlideSight</h1>
-    <p class="head-sub">Lecture deck image descriptions &middot; Accessibility review</p>
+    <p class="head-sub">Picture descriptions for lecture slides</p>
     <p class="head-org">ASU &middot; Fulton Schools</p>
   </div>
   <nav aria-label="Progress through SlideSight">
@@ -29,8 +29,8 @@
   <!-- ─────────────── Step one — upload ─────────────── -->
   <section id="screen-upload" aria-labelledby="upload-h" class="narrow">
     <p class="eyebrow">Step one</p>
-    <h2 id="upload-h">Upload a lecture deck</h2>
-    <p class="lede">SlideSight reads every image in your PowerPoint file, writes a description for it, and saves those descriptions back into the file so a screen reader can read them aloud.</p>
+    <h2 id="upload-h">Upload your slides</h2>
+    <p class="lede">We look at every picture in your slides and write a short description of each one. The descriptions are saved inside the file, so a screen reader can read them out to a blind student.</p>
 
     <div class="card card-gold">
       <label for="deck-file" class="field-label">PowerPoint file (.pptx)</label>
@@ -38,29 +38,29 @@
         <p class="drop-title">Drop your .pptx file here</p>
         <p class="drop-sub">or choose it from your computer &middot; up to 200&nbsp;MB</p>
         <input id="deck-file" type="file" accept=".pptx" aria-describedby="deck-hint">
-        <p id="deck-hint" class="drop-hint">One deck at a time. Nothing else in the file is changed.</p>
+        <p id="deck-hint" class="drop-hint">One file at a time. Nothing else in your slides is changed.</p>
       </div>
       <div class="row-actions">
         <button type="button" id="btn-start" class="btn btn-primary">Describe the images</button>
-        <p class="muted">Takes about two minutes for a 50-slide deck.</p>
+        <p class="muted">About two minutes for 50 slides.</p>
       </div>
       <p id="upload-error" class="error" role="alert" hidden></p>
     </div>
 
     <p class="assure">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A544B" stroke-width="2" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.4 8.3 8 9 4.6-.7 8-4 8-9V6z"></path></svg>
-      <span>Runs on ASU hardware &mdash; files never leave campus.</span>
+      <span>Runs on ASU computers. Your file never leaves campus.</span>
     </p>
   </section>
 
   <!-- ─────────────── Step two — processing ─────────────── -->
   <section id="screen-processing" aria-labelledby="proc-h" class="mid" hidden>
     <p class="eyebrow">Step two</p>
-    <h2 id="proc-h">Describing images</h2>
+    <h2 id="proc-h">Writing descriptions</h2>
 
     <div class="card">
       <div class="prog-head">
-        <p class="mono-lg" id="prog-slide">Slide 0 of 0</p>
+        <p class="mono-lg" id="prog-slide">Image 0 of 0</p>
         <p class="mono-lg muted" id="prog-pct">0%</p>
       </div>
       <div id="progressbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Images described" class="bar">
@@ -69,9 +69,9 @@
       <p aria-live="polite" class="live" id="live-status">Uploading&hellip;</p>
     </div>
 
-    <h3 class="sec-h">Descriptions as they are written</h3>
+    <h3 class="sec-h">Descriptions, as we write them</h3>
     <ul id="feed" class="feed"></ul>
-    <p class="muted small">You can leave this page open. Descriptions the model is unsure about are collected for your review in the next step.</p>
+    <p class="muted small">You can leave this page open. Anything we are unsure about is saved for you to check in the next step.</p>
   </section>
 
   <!-- ─────────────── Step three — review queue ─────────────── -->
@@ -82,13 +82,13 @@
 
     <div class="sticky-bar">
       <p aria-live="polite" class="mono" id="review-count"></p>
-      <p class="muted small">Approving writes the description into the file.</p>
+      <p class="muted small">When you approve one, we save it into the file.</p>
     </div>
 
     <ol id="review-list" class="review-list"></ol>
 
     <div class="mt-30">
-      <button type="button" id="btn-finish" class="btn btn-ghost">Finish review and see results</button>
+      <button type="button" id="btn-finish" class="btn btn-ghost">Done checking &mdash; see results</button>
     </div>
   </section>
 
@@ -104,17 +104,18 @@
     </table>
 
     <h3 class="sec-h">What a blind student hears</h3>
-    <p class="lede">Read aloud by a screen reader, before and after SlideSight.</p>
+    <p class="lede">The same picture, before and after we described it.</p>
     <div id="compare" class="compare"></div>
 
     <h3 class="sec-h">Other accessibility issues found</h3>
-    <p class="lede">SlideSight reports these but does not change them &mdash; each one needs a decision only you can make.</p>
+    <p class="lede">We found these but did not change them. Each one is a choice only you should make.</p>
     <ul id="issues" class="issues"></ul>
+    <p id="wcag-note" class="muted small"></p>
 
     <div class="footer-actions">
-      <button type="button" id="btn-download" class="btn btn-primary">Download the described deck (.pptx)</button>
-      <button type="button" id="btn-report" class="btn btn-ghost">Download the accessibility report (JSON)</button>
-      <button type="button" id="btn-restart" class="btn btn-link">Start another deck</button>
+      <button type="button" id="btn-download" class="btn btn-primary">Download your slides (.pptx)</button>
+      <button type="button" id="btn-report" class="btn btn-ghost">Download the report (JSON)</button>
+      <button type="button" id="btn-restart" class="btn btn-link">Start another file</button>
     </div>
   </section>
 

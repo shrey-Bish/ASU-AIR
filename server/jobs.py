@@ -12,6 +12,7 @@ from __future__ import annotations
 import threading
 import time
 import uuid
+from pathlib import Path
 from typing import Any
 
 # Fields a job tracks. Anything outside this set is rejected on update so a

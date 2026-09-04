@@ -37,6 +37,10 @@ PHOTO_MIN_DISTINCT_COLOURS = 2000
 # costs latency and vision tokens without adding legible detail.
 MAX_IMAGE_EDGE_PX = 1280
 
+# Per-request ceiling. The SDK default is 600s with two retries, which turns a
+# stalled gateway into a 30-minute hang showing 0% progress.
+REQUEST_TIMEOUT_SECONDS = 60.0
+
 # The gateway rate-limits parallel requests; a semaphore keeps us under it.
 DEFAULT_CONCURRENCY = 4
 

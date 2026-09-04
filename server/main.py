@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import shutil
 import tempfile
 import threading
@@ -42,13 +43,24 @@ from pptx import Presentation
 from slidesight import remediate
 from slidesight.extract import extract_images, set_alt_text
 
-from . import config
+from . import config, slides
 from .jobs import registry
 
 logger = logging.getLogger("slidesight.server")
 logging.basicConfig(level=logging.INFO)
 
 CHUNK_SIZE = 1024 * 1024  # stream uploads 1 MB at a time
+
+# Reading one thumbnail used to re-open and fully re-parse the deck, loading
+# every image blob, on the event loop. A review queue of 15 items meant 15 full
+# parses and an unresponsive API. The blobs for a job are read once and kept
+# until the job is cleaned up.
+_THUMBS: dict[str, dict[tuple[int, str], tuple[bytes, str]]] = {}
+_THUMBS_LOCK = threading.Lock()
+
+# Serialises the read-modify-write in approve(), so two approvals cannot
+# interleave and corrupt the deck.
+_SAVE_LOCKS: dict[str, threading.Lock] = {}
 
 PPTX_MEDIA_TYPE = (
     "application/vnd.openxmlformats-officedocument.presentationml.presentation"
@@ -111,6 +123,29 @@ def _run_job(job_id: str, input_path: Path, output_path: Path) -> None:
     else:
         registry.complete_job(job_id, report, str(output_path))
         logger.info("job %s complete", job_id)
+        # Pictures of the slides, for the accessibility findings. Background, so
+        # it never delays the result the user is waiting for.
+        slides.start(job_id, input_path, output_path.parent / "slides")
+
+
+def _save_lock(job_id: str) -> threading.Lock:
+    with _THUMBS_LOCK:
+        return _SAVE_LOCKS.setdefault(job_id, threading.Lock())
+
+
+def _thumbs_for(job_id: str, deck_path: Path) -> dict[tuple[int, str], tuple[bytes, str]]:
+    """Image bytes for one job, parsed once and reused."""
+    with _THUMBS_LOCK:
+        cached = _THUMBS.get(job_id)
+    if cached is not None:
+        return cached
+    table = {
+        (im.slide, im.image_id): (im.blob, im.content_type)
+        for im in extract_images(Presentation(str(deck_path)))
+    }
+    with _THUMBS_LOCK:
+        _THUMBS[job_id] = table
+    return table
 
 
 def _cleanup_old_jobs() -> None:
@@ -120,6 +155,10 @@ def _cleanup_old_jobs() -> None:
         if job_dir and job_dir.is_relative_to(config.UPLOAD_ROOT):
             shutil.rmtree(job_dir, ignore_errors=True)
         registry.drop_job(job["job_id"])
+        with _THUMBS_LOCK:
+            _THUMBS.pop(job["job_id"], None)
+            _SAVE_LOCKS.pop(job["job_id"], None)
+        slides.forget(job["job_id"])
         logger.info("cleaned up expired job %s", job["job_id"])
 
 
@@ -189,6 +228,7 @@ def _processing_state(job: dict) -> dict:
         "progress_pct": job["progress_pct"],
         "current_slide": job["current_slide"],
         "total_slides": job["total_slides"],
+        "total_images": job["total_images"],
         "current_image_id": job["current_image_id"],
         "current_alt_text": job["current_alt_text"],
         "current_confidence": job["current_confidence"],
@@ -261,7 +301,7 @@ def _find_image(prs, slide_no: int, image_id: str):
 
 
 @app.get("/api/jobs/{job_id}/thumb/{slide_no}/{image_id}")
-async def thumbnail(job_id: str, slide_no: int, image_id: str):
+def thumbnail(job_id: str, slide_no: int, image_id: str):
     """The actual picture bytes, so the review queue can show what it is asking about.
 
     A reviewer cannot judge a description without seeing the image. Served from
@@ -276,20 +316,37 @@ async def thumbnail(job_id: str, slide_no: int, image_id: str):
         return _error(404, "No deck available for this job yet.")
 
     try:
-        image = _find_image(Presentation(source), slide_no, image_id)
+        found = _thumbs_for(job_id, Path(source)).get((slide_no, image_id))
     except Exception:  # noqa: BLE001
         return _error(404, "Could not read the deck.")
-    if image is None:
+    if found is None:
         return _error(404, f"No image {image_id} on slide {slide_no}.")
 
     from slidesight.describe import prepare_image
 
-    prepared = prepare_image(image.blob, image.content_type, max_edge=480)
+    blob, content_type = found
+    prepared = prepare_image(blob, content_type, max_edge=480)
     if prepared is None:
         return _error(415, "This image format cannot be displayed.")
     blob, content_type = prepared
     return Response(content=blob, media_type=content_type,
                     headers={"Cache-Control": "private, max-age=3600"})
+
+
+@app.get("/api/jobs/{job_id}/slide/{slide_no}")
+def slide_image(job_id: str, slide_no: int):
+    """A picture of one slide, for the accessibility findings.
+
+    404 while the background render is still running, or if LibreOffice is not
+    available. The page hides the image rather than showing a broken one.
+    """
+    if registry.get_job(job_id) is None:
+        return _error(404, f"Unknown job: {job_id}")
+    path = slides.slide_png(job_id, slide_no)
+    if path is None:
+        return _error(404, "No picture for that slide yet.")
+    return FileResponse(path, media_type="image/png",
+                        headers={"Cache-Control": "private, max-age=3600"})
 
 
 @app.post("/api/jobs/{job_id}/approve")
@@ -321,23 +378,39 @@ async def approve(job_id: str, payload: dict = Body(...)):
         return _error(404, "The remediated file is missing.")
 
     try:
-        prs = Presentation(str(output_path))
-        image = _find_image(prs, slide_no, image_id)
-        if image is None:
-            return _error(404, f"No image {image_id} on slide {slide_no}.")
-        set_alt_text(image.shape, alt_text)
-        prs.save(str(output_path))
+        with _save_lock(job_id):
+            prs = Presentation(str(output_path))
+            image = _find_image(prs, slide_no, image_id)
+            if image is None:
+                return _error(404, f"No image {image_id} on slide {slide_no}.")
+            set_alt_text(image.shape, alt_text)
+            # Save beside the target and swap it in. Writing a zip in place
+            # truncates it first, so an interrupted save would leave a
+            # half-written file that still passes the is_file() check on
+            # download and will not open in PowerPoint.
+            tmp = output_path.with_name(output_path.name + ".tmp")
+            prs.save(str(tmp))
+            os.replace(tmp, output_path)
     except Exception as exc:  # noqa: BLE001
         logger.exception("approve failed for job %s", job_id)
         return _error(500, f"Could not write the description ({type(exc).__name__}).")
 
     # Keep the stored report in step with the file the user will download.
-    report = job.get("report") or {}
-    for record in report.get("images", []):
+    # Rebuild the report so the JSON a user downloads agrees with the .pptx.
+    # get_job returns report by reference, so copy before mutating.
+    from slidesight import apply as _apply
+
+    source_report = job.get("report") or {}
+    report = dict(source_report)
+    images = [dict(r) for r in report.get("images", [])]
+    for record in images:
         if record["slide"] == slide_no and record["image_id"] == image_id:
             record["alt_text"] = alt_text
             record["action"] = "human_approved"
             break
+    report["images"] = images
+    report.update(_apply.summarize(images))
+    report["human_approved"] = sum(1 for r in images if r["action"] == "human_approved")
     registry.update_job(job_id, report=report)
 
     logger.info("job %s: approved %s on slide %s", job_id, image_id, slide_no)

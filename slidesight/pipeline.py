@@ -54,7 +54,14 @@ def _open_presentation(path: Path) -> Presentation:
 
 def make_client() -> AsyncOpenAI:
     """An OpenAI-compatible client pointed at the ASU AIR gateway."""
-    return AsyncOpenAI(api_key=config.get_api_key(), base_url=config.get_base_url())
+    # Without an explicit timeout the SDK waits 600s per attempt and retries
+    # twice, so one stalled request hangs a job for half an hour at 0%.
+    return AsyncOpenAI(
+        api_key=config.get_api_key(),
+        base_url=config.get_base_url(),
+        timeout=config.REQUEST_TIMEOUT_SECONDS,
+        max_retries=2,
+    )
 
 
 async def _describe_one(
@@ -119,9 +126,24 @@ async def remediate(
             _describe_one(client, image, summary, semaphore, on_progress)
             for image in images
         ),
-        return_exceptions=False,
+        return_exceptions=True,
     )
+    records = [
+        r if isinstance(r, dict)
+        else apply.failure_record(images[i], f"{type(r).__name__}: {r}"[:200])
+        for i, r in enumerate(records)
+    ]
     records = sorted(records, key=lambda r: (r["slide"], r["image_id"]))
+
+    # If nothing came back, say so. A report of "every image needs review" is
+    # indistinguishable from a successful run to anyone reading the UI, and the
+    # saved deck would contain no descriptions at all.
+    if records and all(r.get("failed") for r in records):
+        first = str(records[0].get("reason") or "")[:160]
+        raise RuntimeError(
+            "The description service did not answer for any image, so nothing "
+            f"was written. Check the ASU AIR gateway and your key. First error: {first}"
+        )
 
     changed = apply.apply_records(images, records)
 

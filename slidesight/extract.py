@@ -50,10 +50,20 @@ class ImageRef:
 
 
 def walk(shapes) -> Iterator:
-    """Yield every shape, recursing into groups."""
+    """Yield every shape, recursing into groups.
+
+    ``shape_type`` raises NotImplementedError for elements python-pptx has no
+    class for -- most importantly ``p:contentPart``, which is stylus ink. A deck
+    a professor has annotated by hand would otherwise crash extraction outright,
+    so those shapes are skipped rather than allowed to kill the run.
+    """
     for shape in shapes:
+        try:
+            kind = shape.shape_type
+        except NotImplementedError:
+            continue
         yield shape
-        if shape.shape_type == MSO_SHAPE_TYPE.GROUP:
+        if kind == MSO_SHAPE_TYPE.GROUP:
             yield from walk(shape.shapes)
 
 

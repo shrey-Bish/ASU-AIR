@@ -83,11 +83,21 @@ def make_record(image: ImageRef, result: dict[str, Any]) -> dict[str, Any]:
         "decorative": bool(result.get("decorative")),
         "reason": reason,
         "action": action,
+        # What a screen reader announced BEFORE we touched the file. Usually
+        # empty; when it is not it is a filename or a source path the authoring
+        # tool auto-filled, which is the honest "before" for a demo.
+        "existing_alt": image.existing_alt or "",
+        "existing_title": image.existing_title or "",
     }
 
 
 def failure_record(image: ImageRef, reason: str) -> dict[str, Any]:
-    """A failed or unreadable image goes to a human, never to a guess."""
+    """A failed or unreadable image goes to a human, never to a guess.
+
+    ``failed`` distinguishes "the model looked and was unsure" from "we never
+    got an answer". Without it a total gateway outage produces a report that
+    looks like a successful run in which every image happened to need review.
+    """
     return {
         "slide": image.slide,
         "image_id": image.image_id,
@@ -96,6 +106,9 @@ def failure_record(image: ImageRef, reason: str) -> dict[str, Any]:
         "decorative": False,
         "reason": reason,
         "action": ACTION_REVIEW,
+        "failed": True,
+        "existing_alt": image.existing_alt or "",
+        "existing_title": image.existing_title or "",
     }
 
 
@@ -129,4 +142,5 @@ def summarize(records: list[dict[str, Any]]) -> dict[str, int]:
         "auto_applied": sum(1 for r in records if r["action"] == ACTION_AUTO),
         "review_queue": sum(1 for r in records if r["action"] == ACTION_REVIEW),
         "decorative": sum(1 for r in records if r["action"] == ACTION_DECORATIVE),
+        "failed": sum(1 for r in records if r.get("failed")),
     }
